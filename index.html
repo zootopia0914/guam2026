@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>괌 여행 플래너</title>
+  <style>
+    :root {
+      --bg: #f4f8fc;
+      --cd: #ffffff;
+      --tx: #1d2f45;
+      --mu: #6d8299;
+      --ac: #3a86d6;
+      --ac-hover: #2b74c0;
+      --ln: #e0eaf3;
+      --wa: #d9480f;
+      --yl: #fff0c2;
+      --yt: #8a6410;
+      --g: var(--ac);
+      --sh: 0 4px 14px rgba(30, 70, 120, 0.08);
+      box-sizing: border-box;
+      padding-top: env(safe-area-inset-top, 0px);
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) {
+        --bg: #101a28;
+        --cd: #182638;
+        --tx: #e8f0f8;
+        --mu: #96aac0;
+        --ac: #6aaaf0;
+        --ac-hover: #5097e0;
+        --ln: #27394f;
+        --wa: #ff9a5c;
+        --yl: #3b3320;
+        --yt: #f2d98a;
+        --sh: none;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--tx);
+      font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
+    }
+    .w {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 16px 14px 40px;
+    }
+    .hero {
+      padding: 6px 2px 10px;
+    }
+    h1 {
+      font-size: 26px;
+      margin: 0 0 6px;
+      letter-spacing: -0.5px;
+      font-weight: 800;
+    }
+    .sub {
+      color: var(--mu);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+    #stt {
+      font-size: 11px;
+      color: var(--yt);
+      background: var(--yl);
+      border-radius: 99px;
+      padding: 2px 8px;
+      font-weight: 600;
+      display: inline-block;
+    }
+    nav {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      margin: 14px 0;
+      padding: 2px;
+      scrollbar-width: none;
+    }
+    nav::-webkit-scrollbar { display: none; }
+    nav button, .chip {
+      border: 0;
+      background: var(--cd);
+      color: var(--tx);
+      border-radius: 999px;
+      padding: 8px 18px;
+      font: inherit;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      box-shadow: var(--sh);
+      transition: background 0.15s, color 0.15s;
+    }
+    nav button.on, .chip.on {
+      background: var(--ac);
+      color: #fff;
+    }
+    .card {
+      background: var(--cd);
+      border: 1px solid var(--ln);
+      border-radius: 18px;
+      padding: 16px;
+      margin-bottom: 12px;
+      box-shadow: var(--sh);
+    }
+    input, select {
+      font: inherit;
+      color: var(--tx);
+      background: var(--bg);
+      border: 1px solid transparent;
+      border-radius: 10px;
+      padding: 8px 10px;
+      min-width: 0;
+    }
+    input:focus, select:focus {
+      outline: 2px solid var(--ac);
+      background: var(--cd);
+    }
+    .row {
+      display: grid;
+      gap: 6px;
+      align-items: center;
+    }
+    .st {
+      grid-template-columns: 75px 1fr 30px;
+    }
+    .sm {
+      font-size: 12px;
+      color: var(--mu);
+    }
+    .x {
+      border: 0;
+      background: none;
+      color: var(--mu);
+      cursor: pointer;
+      font-size: 20px;
+      line-height: 1;
+      padding: 4px;
+    }
+    .x:hover { color: var(--wa); }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border: 0;
+      background: var(--ac);
+      color: #fff;
+      border-radius: 999px;
+      padding: 11px 18px;
+      font: inherit;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      box-shadow: var(--sh);
+      transition: background 0.15s;
+    }
+    .btn:hover { background: var(--ac-hover); }
+    .btn.g {
+      background: none;
+      color: var(--ac);
+      border: 1.5px solid var(--ac);
+      box-shadow: none;
+    }
+    .tot {
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--ac);
+      letter-spacing: -0.5px;
+    }
+    table { width: 100%; border-collapse: collapse; }
+    td { padding: 5px 3px; }
+    .bar {
+      height: 8px;
+      background: var(--ln);
+      border-radius: 9px;
+      overflow: hidden;
+    }
+    .bar i {
+      display: block;
+      height: 100%;
+      background: var(--ac);
+      border-radius: 9px;
+      transition: width 0.3s;
+    }
+    .ov { overflow-x: auto; }
+    .map {
+      width: 100%;
+      height: auto;
+      background: var(--cd);
+      border-radius: 18px;
+      border: 1px solid var(--ln);
+      box-shadow: var(--sh);
+      display: block;
+      margin: 8px auto 0;
+    }
+    .geo-pill {
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 6px;
+      background: var(--ln);
+      color: var(--tx);
+      border: 0;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .geo-pill:hover { background: var(--ac); color: #fff; }
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      background: #1e293b;
+      color: #fff;
+      padding: 8px 16px;
+      border-radius: 99px;
+      font-size: 13px;
+      font-weight: 500;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.25);
+      transition: transform 0.2s, opacity 0.2s;
+      opacity: 0;
+      pointer-events: none;
+      z-index: 9999;
+    }
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+<div class="w">
+  <div class="hero">
+    <h1>🌴 괌 여행 플래너</h1>
+    <div class="sub">
+      12/4(금) 20:00 출발 → 12/10(목) 02:50 귀국편 · 2명 · <span id="stt">저장됨 ✓</span>
+    </div>
+  </div>
+
+  <nav id="nav"></nav>
+  <div id="v"></div>
+</div>
+
+<div id="toast" class="toast"></div>
+
+<script>
+const TABS = ["일정", "예산", "준비물", "예약"];
+
+const DEF = {
+  days: [
+    { d: "12/4 (금)", s: [{ t: "20:00", n: "인천공항 출발", m: "공항 체크인 및 출국 수속", a: 37.4602, o: 126.4407 }] },
+    { d: "12/5 (토)", s: [
+      { t: "01:10", n: "괌 공항", m: "입국 심사, 렌터카 수령", a: 13.4840, o: 144.7960 },
+      { t: "10:00", n: "투몬 비치", m: "해변 산책, 브런치", a: 13.5200, o: 144.8030 },
+      { t: "17:00", n: "투몬 샌드캐슬 쇼", m: "예약 확인 필요", a: 13.5170, o: 144.8040 }
+    ]},
+    { d: "12/6 (일)", s: [
+      { t: "10:00", n: "괌 언더워터 월드", m: "수족관 관람", a: 13.5130, o: 144.8040 },
+      { t: "14:00", n: "괌 프리미어 아울렛", m: "쇼핑", a: 13.5130, o: 144.8010 },
+      { t: "19:00", n: "투몬 저녁식사", m: "비치인쉬림프", a: 13.5190, o: 144.8050 }
+    ]},
+    { d: "12/7 (월)", s: [
+      { t: "09:30", n: "피시아이 마린파크", m: "스노클링, 해중전망대", a: 13.4640, o: 144.6910 },
+      { t: "13:00", n: "우마탁 요새", m: "남부 드라이브 포토존", a: 13.2970, o: 144.6640 },
+      { t: "16:00", n: "탈로포포 폭포", m: "케이블카", a: 13.3300, o: 144.7510 }
+    ]},
+    { d: "12/8 (화)", s: [
+      { t: "10:00", n: "두 연인의 절벽", m: "사랑의 절벽 전망대", a: 13.5262, o: 144.8113 },
+      { t: "13:00", n: "리티디안 포인트", m: "북부 자연 해변", a: 13.6437, o: 144.8530 },
+      { t: "18:00", n: "투몬 저녁 식사", m: "프로아 BBQ", a: 13.5190, o: 144.8050 }
+    ]},
+    { d: "12/9 (수)", s: [
+      { t: "11:00", n: "괌 프리미어 아울렛", m: "마지막 기념품 쇼핑", a: 13.5130, o: 144.8010 },
+      { t: "18:00", n: "차모로 빌리지", m: "수요일 야시장 바비큐", a: 13.4770, o: 144.7510 },
+      { t: "23:00", n: "괌 공항", m: "렌터카 반납 및 수속", a: 13.4840, o: 144.7960 }
+    ]},
+    { d: "12/10 (목)", s: [{ t: "02:50", n: "괌 출발 (귀국편)", m: "인천 도착", a: "", o: "" }] }
+  ],
+  bud: [
+    { n: "항공권", a: 950000, c: "KRW", k: "교통" },
+    { n: "숙소", a: 1200000, c: "KRW", k: "숙박" },
+    { n: "렌터카", a: 320, c: "USD", k: "교통" },
+    { n: "식비", a: 450, c: "USD", k: "식비" },
+    { n: "입장료·투어", a: 160, c: "USD", k: "액티비티" },
+    { n: "쇼핑", a: 200, c: "USD", k: "쇼핑" }
+  ],
+  rate: 1400,
+  pax: 2,
+  chk: [
+    { g: "필수", i: [["여권 (유효기간 6개월 이상)", 0], ["항공권 E-Ticket 및 호텔 바우처", 0], ["전자세관신고서(Guam EDF) 작성", 0], ["해외결제 신용카드 및 현금 USD", 0], ["여행자 보험 가입증명서", 0]] },
+    { g: "전자기기", i: [["110V 돼지코 어댑터", 0], ["휴대폰 충전기 및 보조배터리", 0], ["eSIM / 로밍 설정", 0], ["방수팩", 0]] },
+    { g: "해변·액티비티", i: [["수영복 / 래시가드", 0], ["선크림 (SPF 50+) 및 선글라스", 0], ["아쿠아슈즈 및 스노클 장비", 0], ["비치타월", 0]] },
+    { g: "기타", i: [["상비약", 0], ["국제운전면허증 및 국내면허증", 0], ["가벼운 바람막이 겉옷", 0]] }
+  ],
+  res: [
+    { k: "항공", n: "인천 → 괌", w: "12/4 (금) 20:00", no: "KE421", m: "사전 좌석지정 완료" },
+    { k: "항공", n: "괌 → 인천", w: "12/10 (목) 02:50", no: "KE422", m: "공항 2시간 반 전 도착" },
+    { k: "숙소", n: "투몬 리조트", w: "12/5 ~ 12/9 (4박)", no: "RES-9810", m: "체크인 15:00" },
+    { k: "렌터카", n: "SUV / 세단", w: "12/5 02:00 ~ 12/9 23:00", no: "CAR-412", m: "공항 인수 및 반납" }
+  ]
+};
+
+let S = JSON.parse(JSON.stringify(DEF));
+let tab = 0, day = 1, zm = 0;
+
+const $ = s => document.querySelector(s);
+const E = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+function toast(msg) {
+  const t = $("#toast");
+  if (!t) return;
+  t.textContent = msg;
+  t.classList.add("show");
+  setTimeout(() => t.classList.remove("show"), 2000);
+}
+
+function save() {
+  try {
+    localStorage.setItem("guam_trip_data", JSON.stringify(S));
+    $("#stt").textContent = "저장됨 ✓";
+  } catch (e) {}
+}
+
+function up(f) {
+  if (typeof f === "function") f();
+  save();
+  render();
+}
+
+// 괌 주요 장소 자동 좌표 사전
+const GEO_DICT = {
+  "투몬": { a: 13.5200, o: 144.8030 },
+  "투몬비치": { a: 13.5200, o: 144.8030 },
+  "공항": { a: 13.4840, o: 144.7960 },
+  "괌공항": { a: 13.4840, o: 144.7960 },
+  "원팻": { a: 13.4840, o: 144.7960 },
+  "샌드캐슬": { a: 13.5170, o: 144.8040 },
+  "언더워터": { a: 13.5130, o: 144.8040 },
+  "언더워터월드": { a: 13.5130, o: 144.8040 },
+  "gpo": { a: 13.5130, o: 144.8010 },
+  "아울렛": { a: 13.5130, o: 144.8010 },
+  "프리미어아울렛": { a: 13.5130, o: 144.8010 },
+  "피시아이": { a: 13.4640, o: 144.6910 },
+  "피시아이마린파크": { a: 13.4640, o: 144.6910 },
+  "우마탁": { a: 13.2970, o: 144.6640 },
+  "우마탁요새": { a: 13.2970, o: 144.6640 },
+  "솔레다드": { a: 13.2970, o: 144.6640 },
+  "탈로포포": { a: 13.3300, o: 144.7510 },
+  "탈로포포폭포": { a: 13.3300, o: 144.7510 },
+  "사랑의절벽": { a: 13.5262, o: 144.8113 },
+  "두연인의절벽": { a: 13.5262, o: 144.8113 },
+  "리티디안": { a: 13.6437, o: 144.8530 },
+  "리티디안포인트": { a: 13.6437, o: 144.8530 },
+  "차모로": { a: 13.4770, o: 144.7510 },
+  "차모로빌리지": { a: 13.4770, o: 144.7510 },
+  "야시장": { a: 13.4770, o: 144.7510 },
+  "두짓타니": { a: 13.5165, o: 144.8050 },
+  "하얏트": { a: 13.5180, o: 144.8060 },
+  "케이마트": { a: 13.5070, o: 144.8015 },
+  "kmart": { a: 13.5070, o: 144.8015 },
+  "마이크로네시아몰": { a: 13.5230, o: 144.8210 },
+  "t갤러리아": { a: 13.5140, o: 144.8055 },
+  "인천공항": { a: 37.4602, o: 126.4407 }
+};
+
+async function autoFindCoords(name, dayIdx, itemIdx) {
+  if (!name || !name.trim()) return;
+  const clean = name.trim().toLowerCase().replace(/\s+/g, "");
+
+  // 사전 검색
+  for (const [k, c] of Object.entries(GEO_DICT)) {
+    if (clean.includes(k)) {
+      if (S.days[dayIdx]?.s[itemIdx]) {
+        S.days[dayIdx].s[itemIdx].a = c.a;
+        S.days[dayIdx].s[itemIdx].o = c.o;
+        toast(`'${name}' 좌표를 자동으로 찾았습니다.`);
+        up();
+        return;
+      }
+    }
+  }
+
+  // 외부 지오코딩 API fallback
+  try {
+    const q = encodeURIComponent(`${name} Guam`);
+    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${q}&limit=1`, {
+      headers: { "Accept-Language": "ko,en" }
+    });
+    const data = await res.json();
+    if (data && data.length > 0) {
+      const lat = parseFloat(parseFloat(data[0].lat).toFixed(4));
+      const lon = parseFloat(parseFloat(data[0].lon).toFixed(4));
+      if (S.days[dayIdx]?.s[itemIdx]) {
+        S.days[dayIdx].s[itemIdx].a = lat;
+        S.days[dayIdx].s[itemIdx].o = lon;
+        toast(`'${name}' 좌표 검색 완료: ${lat}, ${lon}`);
+        up();
+      }
+    } else {
+      toast(`'${name}'의 좌표를 찾지 못했습니다.`);
+    }
+  } catch (e) {
+    toast("좌표 검색 실패");
+  }
+}
+
+// 괌 해안선 SVG 외곽선 데이터
+const GU = [
+  [144.853, 13.644], [144.890, 13.640], [144.940, 13.615], [144.966, 13.600],
+  [144.945, 13.568], [144.905, 13.540], [144.880, 13.520], [144.860, 13.495],
+  [144.835, 13.480], [144.810, 13.455], [144.790, 13.425], [144.780, 13.395],
+  [144.775, 13.350], [144.755, 13.310], [144.730, 13.285], [144.700, 13.255],
+  [144.665, 13.235], [144.640, 13.250], [144.640, 13.290], [144.650, 13.335],
+  [144.645, 13.385], [144.620, 13.430], [144.640, 13.455], [144.695, 13.460],
+  [144.730, 13.470], [144.750, 13.485], [144.775, 13.500], [144.795, 13.518],
+  [144.812, 13.528], [144.820, 13.565], [144.838, 13.605]
+];
+
+// 표준 구글맵 Directions URL 생성기
+function getGoogleMapsUrl(dayIndex) {
+  const currentDay = S.days[dayIndex];
+  if (!currentDay || !currentDay.s) return "";
+
+  const validStops = currentDay.s.filter(s => (s.a !== "" && s.o !== "" && s.a != null) || (s.n && s.n.trim()));
+  if (validStops.length < 2) return "";
+
+  const formatStop = s => {
+    if (s.a !== "" && s.o !== "" && s.a != null) return `${s.a},${s.o}`;
+    return encodeURIComponent(s.n.trim() + " Guam");
+  };
+
+  const origin = formatStop(validStops[0]);
+  const destination = formatStop(validStops[validStops.length - 1]);
+  let url = `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}&travelmode=driving`;
+
+  if (validStops.length > 2) {
+    const waypoints = validStops.slice(1, -1).map(formatStop).join("|");
+    url += `&waypoints=${waypoints}`;
+  }
+  return url;
+}
+
+// 괌 SVG 동선 지도 상시 컴포넌트
+function vMap() {
+  const d = S.days[day];
+  // 괌 범위 좌표만 필터링
+  const P = d.s.filter(s => 
+    s.a !== "" && s.o !== "" && s.a != null &&
+    s.a >= 13.1 && s.a <= 13.8 && s.o >= 144.5 && s.o <= 145.1
+  );
+
+  const gmapsLink = getGoogleMapsUrl(day);
+
+  const W = 400, H = 490;
+  const k = Math.cos(13.45 * Math.PI / 180);
+  let x0 = 144.60, x1 = 145.0, y0 = 13.20, y1 = 13.68;
+
+  if (zm && P.length) {
+    const xs = P.map(p => p.o);
+    const ys = P.map(p => p.a);
+    const mx = Math.min(...xs), Mx = Math.max(...xs);
+    const my = Math.min(...ys), My = Math.max(...ys);
+    const h = Math.max((My - my) * 1.6, (Mx - mx) * 1.6 * k * H / W, 0.06);
+    const w = h * W / H / k;
+    const cx = (mx + Mx) / 2, cy = (my + My) / 2;
+    x0 = cx - w / 2; x1 = cx + w / 2;
+    y0 = cy - h / 2; y1 = cy + h / 2;
+  }
+
+  const pr = (o, a) => [(o - x0) / (x1 - x0) * W, (y1 - a) / (y1 - y0) * H];
+  const c = P.map(p => pr(p.o, p.a));
+  const g = GU.map(p => pr(p[0], p[1]).map(v => v.toFixed(1)).join(",")).join(" ");
+
+  const svg = `
+    <svg class="map" style="max-width:440px;" viewBox="0 0 ${W} ${H}">
+      <rect width="${W}" height="${H}" fill="var(--ln)"/>
+      <polygon points="${g}" fill="var(--cd)" stroke="var(--mu)" stroke-width="1.5" stroke-linejoin="round"/>
+      ${c.length > 1 ? `<polyline points="${c.map(a => a.join(",")).join(" ")}" fill="none" stroke="#ec5f93" stroke-width="2.5" stroke-dasharray="6 4"/>` : ""}
+      ${c.map((a, i) => {
+        const isRight = a[0] > W * 0.6;
+        return `
+          <circle cx="${a[0]}" cy="${a[1]}" r="12" fill="#ec5f93" stroke="var(--cd)" stroke-width="2"/>
+          <text x="${a[0]}" y="${a[1] + 4}" text-anchor="middle" fill="#fff" font-size="11" font-weight="700">${i + 1}</text>
+          <text x="${a[0] + (isRight ? -15 : 15)}" y="${a[1] + 4}" text-anchor="${isRight ? "end" : "start"}" fill="var(--tx)" font-size="11" font-weight="600" paint-order="stroke" stroke="var(--cd)" stroke-width="3">${E(P[i].n)}</text>
+        `;
+      }).join("")}
+      <text x="12" y="24" fill="var(--mu)" font-size="11" font-weight="700">GUAM ISLAND N ↑</text>
+    </svg>
+  `;
+
+  return `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin:18px 0 6px;">
+      <h3 style="margin:0;font-size:16px;">🗺️ 이 날의 동선 (${E(d.d)})</h3>
+      <button class="chip ${zm ? "on" : ""}" style="font-size:12px;padding:4px 12px;" onclick="zm = zm ? 0 : 1; render();">
+        🔍 ${zm ? "전체 보기" : "경로 확대"}
+      </button>
+    </div>
+
+    ${svg}
+
+    ${P.length === 0 ? `
+      <div class="sm" style="margin-top:8px;text-align:center;padding:10px;background:var(--cd);border-radius:12px;border:1px solid var(--ln);">
+        이 날은 괌 내 좌표가 있는 장소가 없습니다. 위도·경도를 입력하거나 📍 버튼을 눌러주세요.
+      </div>
+    ` : `
+      <div class="card" style="margin-top:10px;">
+        <div style="font-size:13px;line-height:1.8;">
+          ${P.map((p, i) => `
+            <div><b>${i + 1}.</b> <span class="sm">${E(p.t || "--:--")}</span> ${E(p.n)} ${p.m ? `<span class="sm">(${E(p.m)})</span>` : ""}</div>
+          `).join("")}
+        </div>
+      </div>
+    `}
+
+    <div style="margin-top:10px;">
+      ${gmapsLink ? `
+        <a class="btn" style="width:100%" target="_blank" rel="noopener noreferrer" href="${gmapsLink}">
+          구글맵에서 이 날 경로 열기 ↗
+        </a>
+      ` : `
+        <div class="sm" style="text-align:center;color:var(--mu);margin-top:6px;">
+          장소가 2곳 이상이면 구글맵 경로 열기 링크가 활성화됩니다.
+        </div>
+      `}
+    </div>
+  `;
+}
+
+// 1. 일정 탭
+function vSch() {
+  const curDay = S.days[day];
+  return `
+    <div style="display:flex;gap:6px;overflow-x:auto;margin-bottom:12px;padding-bottom:2px;">
+      ${S.days.map((d, i) => `
+        <button class="chip ${i === day ? "on" : ""}" onclick="day = ${i}; render();">${E(d.d)}</button>
+      `).join("")}
+    </div>
+
+    <div class="card">
+      ${curDay.s.map((s, j) => `
+        <div style="border-bottom:1px solid var(--ln);padding:10px 0;">
+          <div class="row st">
+            <input value="${E(s.t)}" placeholder="10:00" onchange="up(() => S.days[${day}].s[${j}].t = this.value)">
+            <input value="${E(s.n)}" placeholder="장소 / 할 일" style="font-weight:600" 
+              onchange="const val = this.value; up(() => S.days[${day}].s[${j}].n = val); if(!S.days[${day}].s[${j}].a) autoFindCoords(val, ${day}, ${j});">
+            <button class="x" title="삭제" onclick="up(() => S.days[${day}].s.splice(${j}, 1))">×</button>
+          </div>
+
+          <div class="row" style="grid-template-columns:1fr 75px 75px auto;margin-top:6px;">
+            <input value="${E(s.m)}" placeholder="메모" onchange="up(() => S.days[${day}].s[${j}].m = this.value)">
+            <input type="number" step="any" value="${E(s.a)}" placeholder="위도" onchange="up(() => S.days[${day}].s[${j}].a = this.value === '' ? '' : +this.value)">
+            <input type="number" step="any" value="${E(s.o)}" placeholder="경도" onchange="up(() => S.days[${day}].s[${j}].o = this.value === '' ? '' : +this.value)">
+            <button class="geo-pill" title="장소명으로 좌표 찾기" onclick="autoFindCoords(S.days[${day}].s[${j}].n, ${day}, ${j})">📍 자동</button>
+          </div>
+        </div>
+      `).join("")}
+
+      <button class="btn g" style="margin-top:12px;width:100%" onclick="up(() => S.days[${day}].s.push({ t: '', n: '', m: '', a: '', o: '' }))">
+        + 일정 추가
+      </button>
+    </div>
+
+    <div class="sm" style="margin-bottom:12px;">
+      💡 장소 이름을 입력하면 좌표가 자동 입력됩니다. 비워두면 동선 지도에서 제외됩니다.
+    </div>
+
+    ${vMap()}
+  `;
+}
+
+// 2. 예산 탭
+function usd(b) {
+  return b.c === "USD" ? +b.a : +b.a / S.rate;
+}
+
+function vBud() {
+  const T = S.bud.reduce((s, b) => s + usd(b), 0);
+  const cats = {};
+  S.bud.forEach(b => cats[b.k] = (cats[b.k] || 0) + usd(b));
+  const f = n => Math.round(n || 0).toLocaleString();
+
+  return `
+    <div class="card">
+      <div class="sm">총 예산</div>
+      <div class="tot">$${f(T)} <span class="sm">≈ ${f(T * S.rate)}원</span></div>
+      <div style="margin-top:6px">1인당 <b>$${f(T / (S.pax || 1))}</b> (${f((T * S.rate) / (S.pax || 1))}원)</div>
+      <div class="row" style="grid-template-columns:auto 90px auto 60px;margin-top:10px">
+        <span class="sm">환율 1$ =</span>
+        <input type="number" value="${S.rate}" onchange="up(() => S.rate = +this.value || 1400)">
+        <span class="sm">원 · 인원</span>
+        <input type="number" min="1" value="${S.pax}" onchange="up(() => S.pax = +this.value || 1)">
+      </div>
+    </div>
+
+    <div class="card ov">
+      <table>
+        ${S.bud.map((b, i) => `
+          <tr>
+            <td><input style="width:100%" value="${E(b.n)}" onchange="up(() => S.bud[${i}].n = this.value)"></td>
+            <td><input type="number" style="width:85px" value="${b.a || ""}" placeholder="0" onchange="up(() => S.bud[${i}].a = +this.value)"></td>
+            <td>
+              <select onchange="up(() => S.bud[${i}].c = this.value)">
+                <option ${b.c === "USD" ? "selected" : ""}>USD</option>
+                <option ${b.c === "KRW" ? "selected" : ""}>KRW</option>
+              </select>
+            </td>
+            <td><input style="width:75px" value="${E(b.k)}" onchange="up(() => S.bud[${i}].k = this.value)"></td>
+            <td><button class="x" onclick="up(() => S.bud.splice(${i}, 1))">×</button></td>
+          </tr>
+        `).join("")}
+      </table>
+      <button class="btn g" style="margin-top:8px;width:100%" onclick="up(() => S.bud.push({ n: '', a: 0, c: 'USD', k: '기타' }))">+ 항목 추가</button>
+    </div>
+
+    <div class="card">
+      ${Object.entries(cats).map(([k, v]) => `
+        <div class="sm" style="display:flex;justify-content:space-between;margin-bottom:2px;">
+          <span>${E(k)}</span>
+          <span>$${f(v)}</span>
+        </div>
+        <div class="bar" style="margin-bottom:8px;"><i style="width:${T ? (v / T) * 100 : 0}%"></i></div>
+      `).join("")}
+    </div>
+  `;
+}
+
+// 3. 준비물 탭
+function vChk() {
+  let a = 0, n = 0;
+  S.chk.forEach(g => g.i.forEach(i => { n++; a += i[1]; }));
+
+  return `
+    <div class="card">
+      <b>준비 진행률 ${a}/${n}</b>
+      <div class="bar" style="margin-top:6px;"><i style="width:${n ? (a / n) * 100 : 0}%"></i></div>
+    </div>
+
+    ${S.chk.map((g, gi) => `
+      <div class="card">
+        <b>${E(g.g)}</b>
+        ${g.i.map((it, ii) => `
+          <div style="display:flex;gap:8px;align-items:center;padding:5px 0;">
+            <input type="checkbox" ${it[1] ? "checked" : ""} onchange="up(() => S.chk[${gi}].i[${ii}][1] = this.checked ? 1 : 0)">
+            <span style="flex:1;${it[1] ? "text-decoration:line-through;color:var(--mu)" : ""}">${E(it[0])}</span>
+            <button class="x" onclick="up(() => S.chk[${gi}].i.splice(${ii}, 1))">×</button>
+          </div>
+        `).join("")}
+        <input placeholder="+ 항목 추가 후 Enter" style="width:100%;margin-top:6px" 
+          onkeydown="if(event.key === 'Enter' && this.value.trim()){ const val = this.value.trim(); up(() => S.chk[${gi}].i.push([val, 0])); this.value = ''; }">
+      </div>
+    `).join("")}
+  `;
+}
+
+// 4. 예약 탭
+function vRes() {
+  return `
+    <div class="card ov">
+      <table>
+        ${S.res.map((r, i) => `
+          <tr>
+            <td colspan="2" style="border-bottom:1px solid var(--ln);padding:8px 0;">
+              <div class="row" style="grid-template-columns:75px 1fr 1fr 28px">
+                <input value="${E(r.k)}" onchange="up(() => S.res[${i}].k = this.value)">
+                <input value="${E(r.n)}" placeholder="이름·구간" onchange="up(() => S.res[${i}].n = this.value)">
+                <input value="${E(r.w)}" placeholder="날짜·시간" onchange="up(() => S.res[${i}].w = this.value)">
+                <button class="x" onclick="up(() => S.res.splice(${i}, 1))">×</button>
+              </div>
+              <div class="row" style="grid-template-columns:1fr 1fr;margin-top:5px">
+                <input value="${E(r.no)}" placeholder="확인번호" onchange="up(() => S.res[${i}].no = this.value)">
+                <input value="${E(r.m)}" placeholder="메모" onchange="up(() => S.res[${i}].m = this.value)">
+              </div>
+            </td>
+          </tr>
+        `).join("")}
+      </table>
+      <button class="btn g" style="margin-top:10px;width:100%" onclick="up(() => S.res.push({ k: '', n: '', w: '', no: '', m: '' }))">+ 예약 추가</button>
+    </div>
+  `;
+}
+
+function render() {
+  $("#nav").innerHTML = TABS.map((t, i) => `
+    <button class="${i === tab ? "on" : ""}" onclick="tab = ${i}; render();">${t}</button>
+  `).join("");
+  $("#v").innerHTML = [vSch, vBud, vChk, vRes][tab]();
+}
+
+// 저장된 데이터 로드
+try {
+  const L = localStorage.getItem("guam_trip_data");
+  if (L) {
+    S = JSON.parse(L);
+  }
+} catch (e) {}
+
+render();
+</script>
+</body>
+</html>
