@@ -16,9 +16,9 @@
       --wa: #ef4444;
       --yl: #fef3c7;
       --yt: #92400e;
-      --sea: #dbeafe;
+      --sea: #e0f2fe;
       --land: #ffffff;
-      --land-border: #93c5fd;
+      --land-border: #7dd3fc;
       --pin: #ec4899;
       --sh: 0 4px 16px rgba(30, 70, 120, 0.08);
       box-sizing: border-box;
@@ -37,7 +37,7 @@
         --wa: #f87171;
         --yl: #3f2c06;
         --yt: #fcd34d;
-        --sea: #172554;
+        --sea: #082f49;
         --land: #1e293b;
         --land-border: #38bdf8;
         --sh: none;
@@ -207,15 +207,56 @@
       transition: width 0.3s;
     }
     .ov { overflow-x: auto; }
+    
+    /* 대화형 지도 컨테이너 및 컨트롤 */
+    .map-container {
+      position: relative;
+      width: 100%;
+      max-width: 440px;
+      margin: 8px auto 0;
+      border-radius: 18px;
+      overflow: hidden;
+      border: 1px solid var(--ln);
+      box-shadow: var(--sh);
+      background: var(--sea);
+    }
     .map {
       width: 100%;
       height: auto;
       background: var(--sea);
-      border-radius: 18px;
-      border: 1px solid var(--ln);
-      box-shadow: var(--sh);
       display: block;
-      margin: 8px auto 0;
+      touch-action: none;
+      user-select: none;
+      cursor: grab;
+    }
+    .map:active {
+      cursor: grabbing;
+    }
+    .map-controls {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      display: flex;
+      gap: 5px;
+      align-items: center;
+      z-index: 10;
+    }
+    .map-btn {
+      border: 0;
+      background: var(--cd);
+      color: var(--tx);
+      border-radius: 8px;
+      padding: 5px 9px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+      border: 1px solid var(--ln);
+      backdrop-filter: blur(4px);
+    }
+    .map-btn:hover {
+      background: var(--ac);
+      color: #fff;
     }
     .geo-btn {
       font-size: 11px;
@@ -256,7 +297,7 @@
   <div class="hero">
     <h1>🌴 혜민이와 은주의 괌 여행</h1>
     <div class="sub">
-      12/4(금) 08:00 출발 → 12/10(목) 02:50 귀국편 · 2명 · <span id="stt">저장됨 ✓</span>
+      12/5(토) 출발 → 12/10(목) 02:50 귀국편 · 2명 · <span id="stt">저장됨 ✓</span>
     </div>
   </div>
 
@@ -276,7 +317,7 @@
 <script>
 const TABS = ["일정", "예산", "준비물", "예약"];
 
-// 기본 데이터 (소수점 4자리 정밀 좌표 기본 탑재)
+// 기본 일정 데이터 (소수점 4자리 정밀 좌표 탑재)
 let S = {
   days: [
     {
@@ -347,7 +388,16 @@ let S = {
   ]
 };
 
-let tab = 0, day = 0, zm = 0;
+// 지도 뷰포트 상태 관리 (기본 배율: 전체 뷰)
+let tab = 0, day = 0;
+let mapState = {
+  scale: 1,
+  panX: 0,
+  panY: 0,
+  isDragging: false,
+  startX: 0,
+  startY: 0
+};
 
 const $ = s => document.querySelector(s);
 const E = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
@@ -374,7 +424,7 @@ function up(f) {
   render();
 }
 
-// 괌 주요 장소 소수점 4자리 자동 좌표 매핑
+// 괌 주요 장소 소수점 4자리 자동 좌표 사전
 const GUAM_GEO = {
   "공항": [13.4839, 144.7972], "괌공항": [13.4839, 144.7972], "원팻": [13.4839, 144.7972],
   "투몬": [13.5152, 144.8058], "투몬비치": [13.5152, 144.8058],
@@ -432,39 +482,38 @@ async function autoFindCoords(dIdx, sIdx, name) {
   }
 }
 
-// [핵심] 실제 지리 데이터 기반 정밀 괌 본섬 해안선 좌표군 (리티디안, 투몬만, 아가냐만, 오로테 반도, 코코스만 정밀 반영)
-// 형식: [경도(lon), 위도(lat)]
+// 정밀 괌 본섬 해안선 좌표군 (경도, 위도)
 const GU_DETAILED = [
-  // 1. 리티디안 포인트 ~ 북동부 절벽 해안
   [144.8610, 13.6552], [144.8660, 13.6535], [144.8785, 13.6490], [144.8970, 13.6432],
   [144.9180, 13.6330], [144.9395, 13.6185], [144.9575, 13.6040], [144.9702, 13.5875],
-  // 2. 동북부 해안 (파고만 방향 하강)
   [144.9620, 13.5650], [144.9450, 13.5420], [144.9210, 13.5180], [144.8960, 13.4980],
   [144.8720, 13.4830], [144.8510, 13.4735], [144.8320, 13.4680], [144.8140, 13.4560],
-  // 3. 파고만 (Pago Bay) 및 중동부
   [144.7995, 13.4350], [144.7920, 13.4180], [144.7865, 13.3980], [144.7800, 13.3750],
-  // 4. 탈로포포만 ~ 이나라한 ~ 남단 메리조
   [144.7735, 13.3515], [144.7640, 13.3280], [144.7565, 13.3050], [144.7510, 13.2840],
   [144.7475, 13.2720], [144.7390, 13.2610], [144.7210, 13.2505], [144.6980, 13.2420],
-  [144.6750, 13.2360], [144.6620, 13.2385],
-  // 5. 남서단 및 우마탁 만 (솔레다드 요새)
-  [144.6540, 13.2520], [144.6515, 13.2730], [144.6560, 13.2970], [144.6610, 13.3150],
-  [144.6590, 13.3360], [144.6550, 13.3590], [144.6475, 13.3820], [144.6360, 13.4080],
-  // 6. 오로테 반도 (Orote Peninsula - 괌 서부 돌출부)
-  [144.6220, 13.4320], [144.6150, 13.4420], [144.6185, 13.4470], [144.6360, 13.4490],
-  [144.6620, 13.4450], [144.6850, 13.4495],
-  // 7. 아프라 항 & 피시아이 마린파크 해안
+  [144.6750, 13.2360], [144.6620, 13.2385], [144.6540, 13.2520], [144.6515, 13.2730],
+  [144.6560, 13.2970], [144.6610, 13.3150], [144.6590, 13.3360], [144.6550, 13.3590],
+  [144.6475, 13.3820], [144.6360, 13.4080], [144.6220, 13.4320], [144.6150, 13.4420],
+  [144.6185, 13.4470], [144.6360, 13.4490], [144.6620, 13.4450], [144.6850, 13.4495],
   [144.6930, 13.4646], [144.7080, 13.4710], [144.7250, 13.4735], [144.7390, 13.4755],
-  // 8. 하갓냐 만 (Hagåtña Bay) & 리가로얄 (Tamuning 만곡부)
   [144.7510, 13.4770], [144.7620, 13.4840], [144.7674, 13.4912], [144.7760, 13.5020],
-  // 9. 투몬 만 (Tumon Bay - 두짓타니, 괌플라자, 프로아 해안곡선)
   [144.7870, 13.5065], [144.7950, 13.5110], [144.8030, 13.5160], [144.8077, 13.5190],
-  // 10. 두 연인의 절벽 (사랑의 절벽 대절벽 곡선)
   [144.8025, 13.5351], [144.8060, 13.5520], [144.8140, 13.5780], [144.8250, 13.6060],
   [144.8390, 13.6320], [144.8510, 13.6480]
 ];
 
-// 구글맵 표준 Directions 링크 생성
+// 기본 지리 투영 (고정 좌표 공간: 420 x 510)
+const minLon = 144.590, maxLon = 144.985;
+const minLat = 13.220, maxLat = 13.670;
+const W = 420, H = 510;
+
+function project(lon, lat) {
+  const x = ((lon - minLon) / (maxLon - minLon)) * W;
+  const y = ((maxLat - lat) / (maxLat - minLat)) * H;
+  return [x, y];
+}
+
+// 구글맵 Directions 링크 생성
 function getGoogleMapsUrl(dayIndex) {
   const currentDay = S.days[dayIndex];
   if (!currentDay || !currentDay.s) return "";
@@ -488,7 +537,71 @@ function getGoogleMapsUrl(dayIndex) {
   return url;
 }
 
-// 괌 SVG 동선 지도 컴포넌트 (정밀 정사영 투영 및 왜곡 방지)
+// 지도 줌 및 팬 제어 함수
+function updateMapTransform() {
+  const g = $("#map-viewport");
+  if (g) {
+    g.setAttribute("transform", `translate(${mapState.panX}, ${mapState.panY}) scale(${mapState.scale})`);
+  }
+}
+
+function zoomMap(factor) {
+  const newScale = Math.min(Math.max(mapState.scale * factor, 0.8), 8);
+  // 중심점 기준으로 줌
+  const W = 420, H = 510;
+  const cx = W / 2, cy = H / 2;
+  mapState.panX = cx - (cx - mapState.panX) * (newScale / mapState.scale);
+  mapState.panY = cy - (cy - mapState.panY) * (newScale / mapState.scale);
+  mapState.scale = newScale;
+  updateMapTransform();
+}
+
+function resetMapView() {
+  mapState.scale = 1;
+  mapState.panX = 0;
+  mapState.panY = 0;
+  updateMapTransform();
+}
+
+function fitCurrentDayRoute() {
+  const d = S.days[day];
+  const P = d.s.filter(s => 
+    s.a !== "" && s.o !== "" && s.a != null &&
+    s.a >= 13.1 && s.a <= 13.8 && s.o >= 144.5 && s.o <= 145.1
+  );
+
+  if (!P.length) {
+    resetMapView();
+    return;
+  }
+
+  const W = 420, H = 510;
+  const minLon = 144.590, maxLon = 144.985;
+  const minLat = 13.220, maxLat = 13.670;
+  const project = (lon, lat) => [
+    ((lon - minLon) / (maxLon - minLon)) * W,
+    ((maxLat - lat) / (maxLat - minLat)) * H
+  ];
+
+  const pts = P.map(p => project(p.o, p.a));
+  const xs = pts.map(p => p[0]), ys = pts.map(p => p[1]);
+  const minX = Math.min(...xs), maxX = Math.max(...xs);
+  const minY = Math.min(...ys), maxY = Math.max(...ys);
+
+  const spanX = Math.max(maxX - minX, 40);
+  const spanY = Math.max(maxY - minY, 40);
+  const targetScale = Math.min(Math.min((W - 80) / spanX, (H - 80) / spanY), 5);
+
+  const cx = (minX + maxX) / 2;
+  const cy = (minY + maxY) / 2;
+
+  mapState.scale = targetScale;
+  mapState.panX = (W / 2) - cx * targetScale;
+  mapState.panY = (H / 2) - cy * targetScale;
+  updateMapTransform();
+}
+
+// 괌 SVG 동선 지도 컴포넌트
 function vMap() {
   const d = S.days[day];
   const P = d.s.filter(s => 
@@ -497,90 +610,75 @@ function vMap() {
   );
 
   const gmapsLink = getGoogleMapsUrl(day);
-
   const W = 420, H = 510;
-  // 괌 중심 위도(13.45도) 기준 경도 수축 보정 계수
-  const k = Math.cos(13.45 * Math.PI / 180); // 약 0.9725
 
-  // 전체 지도 바운딩 박스 (괌 전체 영역)
-  let minLon = 144.590, maxLon = 144.985;
-  let minLat = 13.220, maxLat = 13.670;
+  // 전체 지도 기본 바운딩 박스 (디폴트: 괌 전체 뷰)
+  const minLon = 144.590, maxLon = 144.985;
+  const minLat = 13.220, maxLat = 13.670;
 
-  if (zm && P.length) {
-    const lons = P.map(p => p.o);
-    const lats = P.map(p => p.a);
-    const pMinLon = Math.min(...lons), pMaxLon = Math.max(...lons);
-    const pMinLat = Math.min(...lats), pMaxLat = Math.max(...lats);
+  const project = (lon, lat) => [
+    ((lon - minLon) / (maxLon - minLon)) * W,
+    ((maxLat - lat) / (maxLat - minLat)) * H
+  ];
 
-    // 일정 마커를 감싸는 넉넉한 패딩 추가
-    const cLat = (pMinLat + pMaxLat) / 2;
-    const cLon = (pMinLon + pMaxLon) / 2;
-    const spanLat = Math.max(pMaxLat - pMinLat, 0.045) * 1.5;
-    const spanLon = spanLat * (W / H) / k;
-
-    minLat = cLat - spanLat / 2;
-    maxLat = cLat + spanLat / 2;
-    minLon = cLon - spanLon / 2;
-    maxLon = cLon + spanLon / 2;
-  }
-
-  // 투영 변환 함수: (경도, 위도) -> SVG (x, y) 픽셀 좌표
-  const project = (lon, lat) => {
-    const x = ((lon - minLon) / (maxLon - minLon)) * W;
-    const y = ((maxLat - lat) / (maxLat - minLat)) * H;
-    return [x, y];
-  };
-
-  // 1. 섬 외곽선 다각형 생성
   const islandPoints = GU_DETAILED.map(pt => {
     const [x, y] = project(pt[0], pt[1]);
     return `${x.toFixed(1)},${y.toFixed(1)}`;
   }).join(" ");
 
-  // 2. 방문 일정 좌표 투영
   const markerCoords = P.map(p => project(p.o, p.a));
 
   const svg = `
-    <svg class="map" style="max-width:440px;" viewBox="0 0 ${W} ${H}">
-      <!-- 바다 배경 -->
-      <rect width="${W}" height="${H}" fill="var(--sea)"/>
-      
-      <!-- 정밀 괌 본섬 육지 다각형 -->
-      <polygon points="${islandPoints}" fill="var(--land)" stroke="var(--land-border)" stroke-width="2" stroke-linejoin="round"/>
-      
-      <!-- 경로 점선 (Polyline) -->
-      ${markerCoords.length > 1 ? `
-        <polyline points="${markerCoords.map(c => `${c[0].toFixed(1)},${c[1].toFixed(1)}`).join(" ")}" 
-          fill="none" stroke="var(--pin)" stroke-width="2.5" stroke-dasharray="6 4" stroke-linecap="round"/>
-      ` : ""}
-      
-      <!-- 방문지 마커 & 라벨 -->
-      ${markerCoords.map((c, i) => {
-        const x = c[0], y = c[1];
-        const isRight = x > W * 0.6;
-        return `
-          <g>
-            <circle cx="${x}" cy="${y}" r="11" fill="var(--pin)" stroke="#ffffff" stroke-width="2" filter="drop-shadow(0 2px 4px rgba(0,0,0,0.2))"/>
-            <text x="${x}" y="${y + 4}" text-anchor="middle" fill="#ffffff" font-size="11" font-weight="700">${i + 1}</text>
-            <text x="${x + (isRight ? -16 : 16)}" y="${y + 4}" text-anchor="${isRight ? "end" : "start"}" 
-              fill="var(--tx)" font-size="11.5" font-weight="700" paint-order="stroke" stroke="var(--cd)" stroke-width="3.5">${E(P[i].n)}</text>
-          </g>
-        `;
-      }).join("")}
-      
-      <!-- 방위 표시 -->
-      <g transform="translate(14, 24)">
-        <text x="0" y="0" fill="var(--mu)" font-size="11" font-weight="700" letter-spacing="0.5">GUAM ISLAND N ↑</text>
-      </g>
-    </svg>
+    <div class="map-container">
+      <div class="map-controls">
+        <button class="map-btn" style="padding:5px 10px;" onclick="fitCurrentDayRoute()">🎯 경로 맞춤</button>
+        <button class="map-btn" title="전체 기본 배율 리셋" onclick="resetMapView()">🔄 전체</button>
+        <button class="map-btn" title="확대" onclick="zoomMap(1.3)">＋</button>
+        <button class="map-btn" title="축소" onclick="zoomMap(0.77)">－</button>
+      </div>
+      <svg id="interactive-map" class="map" viewBox="0 0 ${W} ${H}"
+        onmousedown="startMapPan(event)"
+        ontouchstart="startMapTouch(event)">
+        <!-- 바다 배경 (클릭/드래그 판정) -->
+        <rect width="${W}" height="${H}" fill="var(--sea)"/>
+        
+        <!-- 줌 & 팬 대상 뷰포트 그룹 -->
+        <g id="map-viewport" transform="translate(${mapState.panX}, ${mapState.panY}) scale(${mapState.scale})">
+          <!-- 괌 본섬 육지 다각형 -->
+          <polygon points="${islandPoints}" fill="var(--land)" stroke="var(--land-border)" stroke-width="2" stroke-linejoin="round"/>
+          
+          <!-- 이동 경로 점선 -->
+          ${markerCoords.length > 1 ? `
+            <polyline points="${markerCoords.map(c => `${c[0].toFixed(1)},${c[1].toFixed(1)}`).join(" ")}" 
+              fill="none" stroke="var(--pin)" stroke-width="2.5" stroke-dasharray="6 4" stroke-linecap="round"/>
+          ` : ""}
+          
+          <!-- 방문지 마커 & 이름 -->
+          ${markerCoords.map((c, i) => {
+            const x = c[0], y = c[1];
+            const isRight = x > W * 0.6;
+            return `
+              <g>
+                <circle cx="${x}" cy="${y}" r="11" fill="var(--pin)" stroke="#ffffff" stroke-width="2" filter="drop-shadow(0 2px 4px rgba(0,0,0,0.25))"/>
+                <text x="${x}" y="${y + 4}" text-anchor="middle" fill="#ffffff" font-size="11" font-weight="700">${i + 1}</text>
+                <text x="${x + (isRight ? -16 : 16)}" y="${y + 4}" text-anchor="${isRight ? "end" : "start"}" 
+                  fill="var(--tx)" font-size="11.5" font-weight="700" paint-order="stroke" stroke="var(--cd)" stroke-width="3.5">${E(P[i].n)}</text>
+              </g>
+            `;
+          }).join("")}
+        </g>
+        
+        <!-- 방위 표시 (고정 UI) -->
+        <g transform="translate(14, 24)" pointer-events="none">
+          <text x="0" y="0" fill="var(--mu)" font-size="11" font-weight="700" letter-spacing="0.5">GUAM ISLAND N ↑</text>
+        </g>
+      </svg>
+    </div>
   `;
 
   return `
     <div style="display:flex;justify-content:space-between;align-items:center;margin:18px 0 6px;">
       <h3 style="margin:0;font-size:16px;">🗺️ 이 날의 동선 지도 (${E(d.d)})</h3>
-      <button class="chip ${zm ? "on" : ""}" style="font-size:12px;padding:4px 12px;" onclick="zm = zm ? 0 : 1; render();">
-        🔍 ${zm ? "전체 보기" : "경로 확대"}
-      </button>
     </div>
 
     ${svg}
@@ -613,13 +711,67 @@ function vMap() {
   `;
 }
 
+// 마우스 & 터치 인터랙션 이벤트 핸들러
+function startMapPan(e) {
+  if (e.target.closest(".map-controls") || e.target.closest("button")) return;
+  mapState.isDragging = true;
+  mapState.startX = e.clientX - mapState.panX;
+  mapState.startY = e.clientY - mapState.panY;
+  window.addEventListener("mousemove", onMapPan);
+  window.addEventListener("mouseup", endMapPan);
+}
+
+function onMapPan(e) {
+  if (!mapState.isDragging) return;
+  mapState.panX = e.clientX - mapState.startX;
+  mapState.panY = e.clientY - mapState.startY;
+  updateMapTransform();
+}
+
+function endMapPan() {
+  mapState.isDragging = false;
+  window.removeEventListener("mousemove", onMapPan);
+  window.removeEventListener("mouseup", endMapPan);
+}
+
+function startMapTouch(e) {
+  if (e.touches.length !== 1) return;
+  mapState.isDragging = true;
+  mapState.startX = e.touches[0].clientX - mapState.panX;
+  mapState.startY = e.touches[0].clientY - mapState.panY;
+  window.addEventListener("touchmove", onMapTouchMove, { passive: false });
+  window.addEventListener("touchend", endMapTouch);
+}
+
+function onMapTouchMove(e) {
+  if (!mapState.isDragging || e.touches.length !== 1) return;
+  e.preventDefault();
+  mapState.panX = e.touches[0].clientX - mapState.startX;
+  mapState.panY = e.touches[0].clientY - mapState.startY;
+  updateMapTransform();
+}
+
+function endMapTouch() {
+  mapState.isDragging = false;
+  window.removeEventListener("touchmove", onMapTouchMove);
+  window.removeEventListener("touchend", endMapTouch);
+}
+
+// 휠 줌 이벤트 바인딩
+window.addEventListener("wheel", e => {
+  const mapSvg = e.target.closest("#interactive-map");
+  if (!mapSvg) return;
+  e.preventDefault();
+  zoomMap(e.deltaY < 0 ? 1.15 : 0.87);
+}, { passive: false });
+
 // 1. 일정 탭
 function vSch() {
   const curDay = S.days[day];
   return `
     <div style="display:flex;gap:6px;overflow-x:auto;margin-bottom:12px;padding-bottom:2px;">
       ${S.days.map((d, i) => `
-        <button class="chip ${i === day ? "on" : ""}" onclick="day = ${i}; render();">${E(d.d)}</button>
+        <button class="chip ${i === day ? "on" : ""}" onclick="day = ${i}; resetMapView(); render();">${E(d.d)}</button>
       `).join("")}
     </div>
 
@@ -771,6 +923,9 @@ function render() {
     <button class="${i === tab ? "on" : ""}" onclick="tab = ${i}; render();">${t}</button>
   `).join("");
   $("#v").innerHTML = [vSch, vBud, vChk, vRes][tab]();
+  if (tab === 0) {
+    initMapEvents();
+  }
 }
 
 // 수정한 현재 데이터를 기본값(S)으로 치환하여 새 index.html 파일 다운로드
