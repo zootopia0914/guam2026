@@ -16,7 +16,10 @@
       --wa: #ef4444;
       --yl: #fef3c7;
       --yt: #92400e;
-      --g: var(--ac);
+      --sea: #dbeafe;
+      --land: #ffffff;
+      --land-border: #93c5fd;
+      --pin: #ec4899;
       --sh: 0 4px 16px rgba(30, 70, 120, 0.08);
       box-sizing: border-box;
       padding-top: env(safe-area-inset-top, 0px);
@@ -34,6 +37,9 @@
         --wa: #f87171;
         --yl: #3f2c06;
         --yt: #fcd34d;
+        --sea: #172554;
+        --land: #1e293b;
+        --land-border: #38bdf8;
         --sh: none;
       }
     }
@@ -114,6 +120,12 @@
       border-radius: 10px;
       padding: 8px 10px;
       min-width: 0;
+    }
+    .coord-input {
+      font-variant-numeric: tabular-nums;
+      font-size: 12.5px;
+      padding: 8px 4px;
+      text-align: center;
     }
     input:focus, select:focus {
       outline: 2px solid var(--ac);
@@ -198,7 +210,7 @@
     .map {
       width: 100%;
       height: auto;
-      background: var(--cd);
+      background: var(--sea);
       border-radius: 18px;
       border: 1px solid var(--ln);
       box-shadow: var(--sh);
@@ -242,9 +254,9 @@
 <body>
 <div class="w">
   <div class="hero">
-    <h1>🌴 혜민이와 은주의 괌 여행❤️</h1>
+    <h1>🌴 혜민이와 은주의 괌 여행</h1>
     <div class="sub">
-      12/4(금) 20:00 출발 → 12/10(목) 02:50 귀국편 · 2명 · <span id="stt">저장됨 ✓</span>
+      12/4(금) 08:00 출발 → 12/10(목) 02:50 귀국편 · 2명 · <span id="stt">저장됨 ✓</span>
     </div>
   </div>
 
@@ -264,7 +276,7 @@
 <script>
 const TABS = ["일정", "예산", "준비물", "예약"];
 
-// 기본 데이터 (소수점 4자리 정밀 좌표로 수정 완료)
+// 기본 데이터 (소수점 4자리 정밀 좌표 기본 탑재)
 let S = {
   days: [
     {
@@ -362,7 +374,7 @@ function up(f) {
   render();
 }
 
-// 괌 주요 장소 자동 좌표 사전 (소수점 4자리 정밀 좌표로 동기화)
+// 괌 주요 장소 소수점 4자리 자동 좌표 매핑
 const GUAM_GEO = {
   "공항": [13.4839, 144.7972], "괌공항": [13.4839, 144.7972], "원팻": [13.4839, 144.7972],
   "투몬": [13.5152, 144.8058], "투몬비치": [13.5152, 144.8058],
@@ -420,16 +432,36 @@ async function autoFindCoords(dIdx, sIdx, name) {
   }
 }
 
-// 괌 섬 외곽선 SVG 데이터
-const GU = [
-  [144.853, 13.644], [144.890, 13.640], [144.940, 13.615], [144.966, 13.600],
-  [144.945, 13.568], [144.905, 13.540], [144.880, 13.520], [144.860, 13.495],
-  [144.835, 13.480], [144.810, 13.455], [144.790, 13.425], [144.780, 13.395],
-  [144.775, 13.350], [144.755, 13.310], [144.730, 13.285], [144.700, 13.255],
-  [144.665, 13.235], [144.640, 13.250], [144.640, 13.290], [144.650, 13.335],
-  [144.645, 13.385], [144.620, 13.430], [144.640, 13.455], [144.695, 13.460],
-  [144.730, 13.470], [144.750, 13.485], [144.775, 13.500], [144.795, 13.518],
-  [144.812, 13.528], [144.820, 13.565], [144.838, 13.605]
+// [핵심] 실제 지리 데이터 기반 정밀 괌 본섬 해안선 좌표군 (리티디안, 투몬만, 아가냐만, 오로테 반도, 코코스만 정밀 반영)
+// 형식: [경도(lon), 위도(lat)]
+const GU_DETAILED = [
+  // 1. 리티디안 포인트 ~ 북동부 절벽 해안
+  [144.8610, 13.6552], [144.8660, 13.6535], [144.8785, 13.6490], [144.8970, 13.6432],
+  [144.9180, 13.6330], [144.9395, 13.6185], [144.9575, 13.6040], [144.9702, 13.5875],
+  // 2. 동북부 해안 (파고만 방향 하강)
+  [144.9620, 13.5650], [144.9450, 13.5420], [144.9210, 13.5180], [144.8960, 13.4980],
+  [144.8720, 13.4830], [144.8510, 13.4735], [144.8320, 13.4680], [144.8140, 13.4560],
+  // 3. 파고만 (Pago Bay) 및 중동부
+  [144.7995, 13.4350], [144.7920, 13.4180], [144.7865, 13.3980], [144.7800, 13.3750],
+  // 4. 탈로포포만 ~ 이나라한 ~ 남단 메리조
+  [144.7735, 13.3515], [144.7640, 13.3280], [144.7565, 13.3050], [144.7510, 13.2840],
+  [144.7475, 13.2720], [144.7390, 13.2610], [144.7210, 13.2505], [144.6980, 13.2420],
+  [144.6750, 13.2360], [144.6620, 13.2385],
+  // 5. 남서단 및 우마탁 만 (솔레다드 요새)
+  [144.6540, 13.2520], [144.6515, 13.2730], [144.6560, 13.2970], [144.6610, 13.3150],
+  [144.6590, 13.3360], [144.6550, 13.3590], [144.6475, 13.3820], [144.6360, 13.4080],
+  // 6. 오로테 반도 (Orote Peninsula - 괌 서부 돌출부)
+  [144.6220, 13.4320], [144.6150, 13.4420], [144.6185, 13.4470], [144.6360, 13.4490],
+  [144.6620, 13.4450], [144.6850, 13.4495],
+  // 7. 아프라 항 & 피시아이 마린파크 해안
+  [144.6930, 13.4646], [144.7080, 13.4710], [144.7250, 13.4735], [144.7390, 13.4755],
+  // 8. 하갓냐 만 (Hagåtña Bay) & 리가로얄 (Tamuning 만곡부)
+  [144.7510, 13.4770], [144.7620, 13.4840], [144.7674, 13.4912], [144.7760, 13.5020],
+  // 9. 투몬 만 (Tumon Bay - 두짓타니, 괌플라자, 프로아 해안곡선)
+  [144.7870, 13.5065], [144.7950, 13.5110], [144.8030, 13.5160], [144.8077, 13.5190],
+  // 10. 두 연인의 절벽 (사랑의 절벽 대절벽 곡선)
+  [144.8025, 13.5351], [144.8060, 13.5520], [144.8140, 13.5780], [144.8250, 13.6060],
+  [144.8390, 13.6320], [144.8510, 13.6480]
 ];
 
 // 구글맵 표준 Directions 링크 생성
@@ -456,7 +488,7 @@ function getGoogleMapsUrl(dayIndex) {
   return url;
 }
 
-// 괌 SVG 동선 지도 컴포넌트
+// 괌 SVG 동선 지도 컴포넌트 (정밀 정사영 투영 및 왜곡 방지)
 function vMap() {
   const d = S.days[day];
   const P = d.s.filter(s => 
@@ -466,40 +498,80 @@ function vMap() {
 
   const gmapsLink = getGoogleMapsUrl(day);
 
-  const W = 400, H = 490;
-  const k = Math.cos(13.45 * Math.PI / 180);
-  let x0 = 144.60, x1 = 145.0, y0 = 13.20, y1 = 13.68;
+  const W = 420, H = 510;
+  // 괌 중심 위도(13.45도) 기준 경도 수축 보정 계수
+  const k = Math.cos(13.45 * Math.PI / 180); // 약 0.9725
+
+  // 전체 지도 바운딩 박스 (괌 전체 영역)
+  let minLon = 144.590, maxLon = 144.985;
+  let minLat = 13.220, maxLat = 13.670;
 
   if (zm && P.length) {
-    const xs = P.map(p => p.o);
-    const ys = P.map(p => p.a);
-    const mx = Math.min(...xs), Mx = Math.max(...xs);
-    const my = Math.min(...ys), My = Math.max(...ys);
-    const h = Math.max((My - my) * 1.6, (Mx - mx) * 1.6 * k * H / W, 0.06);
-    const w = h * W / H / k;
-    const cx = (mx + Mx) / 2, cy = (my + My) / 2;
-    x0 = cx - w / 2; x1 = cx + w / 2;
-    y0 = cy - h / 2; y1 = cy + h / 2;
+    const lons = P.map(p => p.o);
+    const lats = P.map(p => p.a);
+    const pMinLon = Math.min(...lons), pMaxLon = Math.max(...lons);
+    const pMinLat = Math.min(...lats), pMaxLat = Math.max(...lats);
+
+    // 일정 마커를 감싸는 넉넉한 패딩 추가
+    const cLat = (pMinLat + pMaxLat) / 2;
+    const cLon = (pMinLon + pMaxLon) / 2;
+    const spanLat = Math.max(pMaxLat - pMinLat, 0.045) * 1.5;
+    const spanLon = spanLat * (W / H) / k;
+
+    minLat = cLat - spanLat / 2;
+    maxLat = cLat + spanLat / 2;
+    minLon = cLon - spanLon / 2;
+    maxLon = cLon + spanLon / 2;
   }
 
-  const pr = (o, a) => [(o - x0) / (x1 - x0) * W, (y1 - a) / (y1 - y0) * H];
-  const c = P.map(p => pr(p.o, p.a));
-  const g = GU.map(p => pr(p[0], p[1]).map(v => v.toFixed(1)).join(",")).join(" ");
+  // 투영 변환 함수: (경도, 위도) -> SVG (x, y) 픽셀 좌표
+  const project = (lon, lat) => {
+    const x = ((lon - minLon) / (maxLon - minLon)) * W;
+    const y = ((maxLat - lat) / (maxLat - minLat)) * H;
+    return [x, y];
+  };
+
+  // 1. 섬 외곽선 다각형 생성
+  const islandPoints = GU_DETAILED.map(pt => {
+    const [x, y] = project(pt[0], pt[1]);
+    return `${x.toFixed(1)},${y.toFixed(1)}`;
+  }).join(" ");
+
+  // 2. 방문 일정 좌표 투영
+  const markerCoords = P.map(p => project(p.o, p.a));
 
   const svg = `
     <svg class="map" style="max-width:440px;" viewBox="0 0 ${W} ${H}">
-      <rect width="${W}" height="${H}" fill="var(--ln)"/>
-      <polygon points="${g}" fill="var(--cd)" stroke="var(--mu)" stroke-width="1.5" stroke-linejoin="round"/>
-      ${c.length > 1 ? `<polyline points="${c.map(a => a.join(",")).join(" ")}" fill="none" stroke="#ec4899" stroke-width="2.5" stroke-dasharray="6 4"/>` : ""}
-      ${c.map((a, i) => {
-        const isRight = a[0] > W * 0.6;
+      <!-- 바다 배경 -->
+      <rect width="${W}" height="${H}" fill="var(--sea)"/>
+      
+      <!-- 정밀 괌 본섬 육지 다각형 -->
+      <polygon points="${islandPoints}" fill="var(--land)" stroke="var(--land-border)" stroke-width="2" stroke-linejoin="round"/>
+      
+      <!-- 경로 점선 (Polyline) -->
+      ${markerCoords.length > 1 ? `
+        <polyline points="${markerCoords.map(c => `${c[0].toFixed(1)},${c[1].toFixed(1)}`).join(" ")}" 
+          fill="none" stroke="var(--pin)" stroke-width="2.5" stroke-dasharray="6 4" stroke-linecap="round"/>
+      ` : ""}
+      
+      <!-- 방문지 마커 & 라벨 -->
+      ${markerCoords.map((c, i) => {
+        const x = c[0], y = c[1];
+        const isRight = x > W * 0.6;
         return `
-          <circle cx="${a[0]}" cy="${a[1]}" r="12" fill="#ec4899" stroke="var(--cd)" stroke-width="2"/>
-          <text x="${a[0]}" y="${a[1] + 4}" text-anchor="middle" fill="#fff" font-size="11" font-weight="700">${i + 1}</text>
-          <text x="${a[0] + (isRight ? -15 : 15)}" y="${a[1] + 4}" text-anchor="${isRight ? "end" : "start"}" fill="var(--tx)" font-size="11" font-weight="600" paint-order="stroke" stroke="var(--cd)" stroke-width="3">${E(P[i].n)}</text>
+          <g>
+            <circle cx="${x}" cy="${y}" r="11" fill="var(--pin)" stroke="#ffffff" stroke-width="2" filter="drop-shadow(0 2px 4px rgba(0,0,0,0.2))"/>
+            <text x="${x}" y="${y + 4}" text-anchor="middle" fill="#ffffff" font-size="11" font-weight="700">${i + 1}</text>
+            <text x="${x + (isRight ? -16 : 16)}" y="${y + 4}" text-anchor="${isRight ? "end" : "start"}" 
+              fill="var(--tx)" font-size="11.5" font-weight="700" paint-order="stroke" stroke="var(--cd)" stroke-width="3.5">${E(P[i].n)}</text>
+          </g>
         `;
       }).join("")}
-      <text x="12" y="24" fill="var(--mu)" font-size="11" font-weight="700">GUAM ISLAND N ↑</text>
+      
+      <!-- 방위 표시 -->
+      <g transform="translate(14, 24)">
+        <text x="0" y="0" fill="var(--mu)" font-size="11" font-weight="700" letter-spacing="0.5">GUAM ISLAND N ↑</text>
+      </g>
     </svg>
   `;
 
@@ -521,7 +593,7 @@ function vMap() {
       <div class="card" style="margin-top:10px;">
         <div style="font-size:13px;line-height:1.8;">
           ${P.map((p, i) => `
-            <div><b>${i + 1}.</b> <span class="sm">${E(p.t || "--:--")}</span> ${E(p.n)} ${p.m ? `<span class="sm">(${E(p.m)})</span>` : ""}</div>
+            <div><b>${i + 1}.</b> <span class="sm">${E(p.t || "--:--")}</span> <b>${E(p.n)}</b> ${p.m ? `<span class="sm">(${E(p.m)})</span>` : ""} <span class="sm" style="color:var(--mu)">[${Number(p.a).toFixed(4)}, ${Number(p.o).toFixed(4)}]</span></div>
           `).join("")}
         </div>
       </div>
@@ -561,10 +633,10 @@ function vSch() {
             <button class="x" title="삭제" onclick="up(() => S.days[${day}].s.splice(${j}, 1))">×</button>
           </div>
 
-          <div class="row" style="grid-template-columns:1fr 75px 75px auto;margin-top:6px;">
+          <div class="row" style="grid-template-columns:1fr 88px 96px auto;margin-top:6px;">
             <input value="${E(s.m)}" placeholder="메모" onchange="up(() => S.days[${day}].s[${j}].m = this.value)">
-            <input type="number" step="0.0001" value="${s.a !== '' && s.a != null ? Number(s.a).toFixed(4) : ''}" placeholder="위도" onchange="up(() => S.days[${day}].s[${j}].a = this.value === '' ? '' : +this.value)">
-            <input type="number" step="0.0001" value="${s.o !== '' && s.o != null ? Number(s.o).toFixed(4) : ''}" placeholder="경도" onchange="up(() => S.days[${day}].s[${j}].o = this.value === '' ? '' : +this.value)">
+            <input class="coord-input" type="number" step="0.0001" value="${s.a !== '' && s.a != null ? Number(s.a).toFixed(4) : ''}" placeholder="위도 (13.xxxx)" onchange="up(() => S.days[${day}].s[${j}].a = this.value === '' ? '' : +this.value)">
+            <input class="coord-input" type="number" step="0.0001" value="${s.o !== '' && s.o != null ? Number(s.o).toFixed(4) : ''}" placeholder="경도 (144.xxxx)" onchange="up(() => S.days[${day}].s[${j}].o = this.value === '' ? '' : +this.value)">
             <button class="geo-btn" title="장소명으로 좌표 다시 찾기" onclick="autoFindCoords(${day}, ${j}, S.days[${day}].s[${j}].n)">📍 자동</button>
           </div>
         </div>
@@ -716,11 +788,12 @@ function exportHtml() {
   toast("index.html 다운로드 완료!");
 }
 
-// 저장된 데이터 로드
+// 저장된 데이터 로드 (캐시 우선 복구 및 구조 호환성 유지)
 try {
   const L = localStorage.getItem("guam_trip_v2");
   if (L) {
-    S = JSON.parse(L);
+    const parsed = JSON.parse(L);
+    if (parsed && parsed.days) S = parsed;
   }
 } catch (e) {}
 
