@@ -256,7 +256,7 @@
     .map-btn-group {
       display: flex;
       gap: 4px;
-      background: rgba(255, 255, 255, 0.92);
+      background: rgba(255, 255, 255, 0.94);
       padding: 3px;
       border-radius: 12px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.15);
@@ -264,7 +264,7 @@
     }
     @media (prefers-color-scheme: dark) {
       .map-btn-group {
-        background: rgba(30, 41, 59, 0.92);
+        background: rgba(30, 41, 59, 0.94);
       }
     }
     .map-btn {
@@ -428,8 +428,9 @@ const defaultS = {
 let S = JSON.parse(JSON.stringify(defaultS));
 let tab = 0, day = 0;
 
-let mapScale = 1.0;
-let mapPan = { x: 0, y: 0 };
+// 표준 전체 괌 기본 viewBox
+const BASE_VB = { x: 0, y: 0, w: 400, h: 490 };
+let currentVB = { ...BASE_VB };
 
 const $ = s => document.querySelector(s);
 const E = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
@@ -444,7 +445,7 @@ function toast(msg) {
 
 function save() {
   try {
-    localStorage.setItem("guam_trip_final_v6", JSON.stringify(S));
+    localStorage.setItem("guam_trip_final_v7", JSON.stringify(S));
     const stt = $("#stt");
     if (stt) stt.textContent = "저장됨 ✓";
   } catch (e) {}
@@ -559,18 +560,21 @@ function getGoogleMapsUrl(dayIndex) {
   return url;
 }
 
-function zoomMap(factor) {
-  mapScale = Math.min(Math.max(0.8, mapScale * factor), 7.0);
-  applyMapTransform();
+// 위경도를 SVG 400x490 좌표계로 변환
+function pr(o, a) {
+  const W = 400, H = 490;
+  const x0 = 144.58, x1 = 145.02, y0 = 13.20, y1 = 13.69;
+  return [(o - x0) / (x1 - x0) * W, (y1 - a) / (y1 - y0) * H];
 }
 
-function resetMap() {
-  mapScale = 1.0;
-  mapPan = { x: 0, y: 0 };
-  applyMapTransform();
+function updateSvgViewBox() {
+  const svg = document.getElementById("interactiveSvg");
+  if (svg) {
+    svg.setAttribute("viewBox", `${currentVB.x} ${currentVB.y} ${currentVB.w} ${currentVB.h}`);
+  }
 }
 
-// 정확한 중심 맞춤 및 자동 확대 계산 (수학식 및 타이밍 오류 수정)
+// 오류 없는 확실한 viewBox 기반 Fit 알고리즘
 function fitCurrentRoute() {
   const d = S.days[day];
   if (!d || !d.s) return;
@@ -580,39 +584,71 @@ function fitCurrentRoute() {
     return;
   }
 
-  const W = 400, H = 490;
-  const x0 = 144.58, x1 = 145.02, y0 = 13.20, y1 = 13.69;
-  const pr = (o, a) => [(o - x0) / (x1 - x0) * W, (y1 - a) / (y1 - y0) * H];
   const c = P.map(p => pr(p.o, p.a));
-
   const xs = c.map(pt => pt[0]);
   const ys = c.map(pt => pt[1]);
-  const minX = Math.min(...xs), maxX = Math.max(...xs);
-  const minY = Math.min(...ys), maxY = Math.max(...ys);
 
-  const routeW = Math.max(maxX - minX, 40);
-  const routeH = Math.max(maxY - minY, 40);
+  const minX = Math.min(...xs);
+  const maxX = Math.max(...xs);
+  const minY = Math.min(...ys);
+  const maxY = Math.max(...ys);
 
-  // 화면의 70%를 차지하도록 스케일 계산
-  const scaleX = (W * 0.70) / routeW;
-  const scaleY = (H * 0.70) / routeH;
-  mapScale = Math.min(Math.max(Math.min(scaleX, scaleY), 1.3), 4.5);
+  // 스폿 간 최소 경계 너비 (너무 좁게 잡혀 화면 밖으로 글자가 나가지 않도록 여백 확보)
+  let bw = Math.max(maxX - minX, 60);
+  let bh = Math.max(maxY - minY, 60);
 
-  const centerX = (minX + maxX) / 2;
-  const centerY = (minY + maxY) / 2;
+  // 넉넉한 여백(패딩) 추가
+  const pad = 45;
+  bw += pad * 2;
+  bh += pad * 2;
 
-  // viewBox(400x490) 정중앙에 스폿들의 무게중심을 정렬
-  mapPan.x = (W / 2) - (centerX * mapScale);
-  mapPan.y = (H / 2) - (centerY * mapScale);
+  // 400:490 종횡비 유지
+  const targetRatio = 400 / 490;
+  let finalW, finalH;
 
-  applyMapTransform();
+  if (bw / bh > targetRatio) {
+    finalW = bw;
+    finalH = bw / targetRatio;
+  } else {
+    finalH = bh;
+    finalW = bh * targetRatio;
+  }
+
+  // 최대 전체 섬 크기 초과 방지
+  finalW = Math.min(finalW, 400);
+  finalH = Math.min(finalH, 490);
+
+  const cx = (minX + maxX) / 2;
+  const cy = (minY + maxY) / 2;
+
+  currentVB = {
+    x: Math.max(0, Math.min(cx - finalW / 2, 400 - finalW)),
+    y: Math.max(0, Math.min(cy - finalH / 2, 490 - finalH)),
+    w: finalW,
+    h: finalH
+  };
+
+  updateSvgViewBox();
 }
 
-function applyMapTransform() {
-  const g = document.getElementById("mapZoomGroup");
-  if (g) {
-    g.setAttribute("transform", `translate(${mapPan.x}, ${mapPan.y}) scale(${mapScale})`);
-  }
+function resetMap() {
+  currentVB = { ...BASE_VB };
+  updateSvgViewBox();
+}
+
+function zoomMap(factor) {
+  const cx = currentVB.x + currentVB.w / 2;
+  const cy = currentVB.y + currentVB.h / 2;
+  const newW = Math.max(50, Math.min(400, currentVB.w / factor));
+  const newH = Math.max(60, Math.min(490, currentVB.h / factor));
+
+  currentVB = {
+    x: Math.max(0, Math.min(cx - newW / 2, 400 - newW)),
+    y: Math.max(0, Math.min(cy - newH / 2, 490 - newH)),
+    w: newW,
+    h: newH
+  };
+  updateSvgViewBox();
 }
 
 // 괌 SVG 동선 지도 컴포넌트
@@ -624,11 +660,7 @@ function vMap() {
   );
 
   const gmapsLink = getGoogleMapsUrl(day);
-
   const W = 400, H = 490;
-  const x0 = 144.58, x1 = 145.02, y0 = 13.20, y1 = 13.69;
-  const pr = (o, a) => [(o - x0) / (x1 - x0) * W, (y1 - a) / (y1 - y0) * H];
-  
   const c = P.map(p => pr(p.o, p.a));
   const polyPoints = GU_DETAILED.map(p => pr(p[0], p[1]).map(v => v.toFixed(1)).join(",")).join(" ");
 
@@ -653,30 +685,27 @@ function vMap() {
         </div>
       </div>
 
-      <svg id="interactiveSvg" class="map-svg" viewBox="0 0 ${W} ${H}">
+      <svg id="interactiveSvg" class="map-svg" viewBox="${currentVB.x} ${currentVB.y} ${currentVB.w} ${currentVB.h}">
         <rect width="${W}" height="${H}" fill="var(--ln)"/>
         
-        <!-- style에 transition 제거: 즉각적이고 정확한 Fit 보장 -->
-        <g id="mapZoomGroup" transform="translate(${mapPan.x}, ${mapPan.y}) scale(${mapScale})">
-          <polygon points="${polyPoints}" fill="var(--cd)" stroke="var(--mu)" stroke-width="1.0" stroke-linejoin="round"/>
-          
-          ${c.length > 1 ? `<polyline points="${c.map(a => a.join(",")).join(" ")}" fill="none" stroke="#ec4899" stroke-width="2" stroke-dasharray="4 3" stroke-linecap="round"/>` : ""}
-          
-          ${c.map((a, i) => {
-            const off = offsets[i % offsets.length];
-            const tx = a[0] + off.dx;
-            const ty = a[1] + off.dy;
+        <polygon points="${polyPoints}" fill="var(--cd)" stroke="var(--mu)" stroke-width="1.0" stroke-linejoin="round"/>
+        
+        ${c.length > 1 ? `<polyline points="${c.map(a => a.join(",")).join(" ")}" fill="none" stroke="#ec4899" stroke-width="2" stroke-dasharray="4 3" stroke-linecap="round"/>` : ""}
+        
+        ${c.map((a, i) => {
+          const off = offsets[i % offsets.length];
+          const tx = a[0] + off.dx;
+          const ty = a[1] + off.dy;
 
-            return `
-              <line x1="${a[0]}" y1="${a[1]}" x2="${tx}" y2="${ty}" stroke="#ec4899" stroke-width="0.8" stroke-dasharray="2 1.5" opacity="0.65"/>
-              <circle cx="${a[0]}" cy="${a[1]}" r="7.5" fill="#ec4899" stroke="var(--cd)" stroke-width="1.5"/>
-              <text x="${a[0]}" y="${a[1] + 3}" text-anchor="middle" fill="#fff" font-size="8.5" font-weight="800">${i + 1}</text>
-              <text x="${tx}" y="${ty + 3}" text-anchor="${off.anchor}" fill="var(--tx)" font-size="8.5" font-weight="700" paint-order="stroke" stroke="var(--cd)" stroke-width="2.5" stroke-linejoin="round">
-                ${E(P[i].n)}
-              </text>
-            `;
-          }).join("")}
-        </g>
+          return `
+            <line x1="${a[0]}" y1="${a[1]}" x2="${tx}" y2="${ty}" stroke="#ec4899" stroke-width="0.8" stroke-dasharray="2 1.5" opacity="0.65"/>
+            <circle cx="${a[0]}" cy="${a[1]}" r="7.5" fill="#ec4899" stroke="var(--cd)" stroke-width="1.5"/>
+            <text x="${a[0]}" y="${a[1] + 3}" text-anchor="middle" fill="#fff" font-size="8.5" font-weight="800">${i + 1}</text>
+            <text x="${tx}" y="${ty + 3}" text-anchor="${off.anchor}" fill="var(--tx)" font-size="8.5" font-weight="700" paint-order="stroke" stroke="var(--cd)" stroke-width="2.5" stroke-linejoin="round">
+              ${E(P[i].n)}
+            </text>
+          `;
+        }).join("")}
         
         <text x="12" y="20" fill="var(--mu)" font-size="9.5" font-weight="700" style="pointer-events:none;">GUAM ISLAND N ↑</text>
       </svg>
@@ -866,7 +895,7 @@ function vRes() {
   `;
 }
 
-// 지도 터치/마우스 이벤트 리스너
+// viewBox 기반 마우스 & 터치 드래그 이동 제어
 function attachMapEvents() {
   const container = document.getElementById("mapContainer");
   const svg = document.getElementById("interactiveSvg");
@@ -874,17 +903,26 @@ function attachMapEvents() {
 
   let isMouseDragging = false;
   let mouseStart = { x: 0, y: 0 };
+  let startVB = { ...currentVB };
 
   svg.addEventListener("mousedown", e => {
     isMouseDragging = true;
-    mouseStart = { x: e.clientX - mapPan.x, y: e.clientY - mapPan.y };
+    mouseStart = { x: e.clientX, y: e.clientY };
+    startVB = { ...currentVB };
   });
 
   window.addEventListener("mousemove", e => {
     if (!isMouseDragging) return;
-    mapPan.x = e.clientX - mouseStart.x;
-    mapPan.y = e.clientY - mouseStart.y;
-    applyMapTransform();
+    const rect = svg.getBoundingClientRect();
+    const factorX = currentVB.w / rect.width;
+    const factorY = currentVB.h / rect.height;
+
+    const dx = (e.clientX - mouseStart.x) * factorX;
+    const dy = (e.clientY - mouseStart.y) * factorY;
+
+    currentVB.x = Math.max(0, Math.min(startVB.x - dx, 400 - currentVB.w));
+    currentVB.y = Math.max(0, Math.min(startVB.y - dy, 490 - currentVB.h));
+    updateSvgViewBox();
   });
 
   window.addEventListener("mouseup", () => {
@@ -893,20 +931,15 @@ function attachMapEvents() {
 
   container.addEventListener("wheel", e => {
     e.preventDefault();
-    const factor = e.deltaY < 0 ? 1.15 : 0.87;
-    mapScale = Math.min(Math.max(0.8, mapScale * factor), 7.0);
-    applyMapTransform();
+    zoomMap(e.deltaY < 0 ? 1.15 : 0.85);
   }, { passive: false });
 
+  // 모바일 2점 터치 핀치/팬
   let initialPinchDist = null;
-  let initialScale = mapScale;
   let touchStartCenter = { x: 0, y: 0 };
-  let startPan = { x: 0, y: 0 };
 
   function getTouchDistance(touches) {
-    const dx = touches[0].clientX - touches[1].clientX;
-    const dy = touches[0].clientY - touches[1].clientY;
-    return Math.hypot(dx, dy);
+    return Math.hypot(touches[0].clientX - touches[1].clientX, touches[0].clientY - touches[1].clientY);
   }
 
   function getTouchCenter(touches) {
@@ -920,9 +953,8 @@ function attachMapEvents() {
     if (e.touches.length === 2) {
       e.preventDefault();
       initialPinchDist = getTouchDistance(e.touches);
-      initialScale = mapScale;
       touchStartCenter = getTouchCenter(e.touches);
-      startPan = { ...mapPan };
+      startVB = { ...currentVB };
     } else {
       initialPinchDist = null;
     }
@@ -931,15 +963,24 @@ function attachMapEvents() {
   container.addEventListener("touchmove", e => {
     if (e.touches.length === 2 && initialPinchDist) {
       e.preventDefault();
+      const rect = svg.getBoundingClientRect();
       const currentDist = getTouchDistance(e.touches);
-      const factor = currentDist / initialPinchDist;
-      mapScale = Math.min(Math.max(0.8, initialScale * factor), 7.0);
+      const zoomFactor = currentDist / initialPinchDist;
 
       const currentCenter = getTouchCenter(e.touches);
-      mapPan.x = startPan.x + (currentCenter.x - touchStartCenter.x);
-      mapPan.y = startPan.y + (currentCenter.y - touchStartCenter.y);
+      const factorX = startVB.w / rect.width;
+      const factorY = startVB.h / rect.height;
+      const dx = (currentCenter.x - touchStartCenter.x) * factorX;
+      const dy = (currentCenter.y - touchStartCenter.y) * factorY;
 
-      applyMapTransform();
+      const newW = Math.max(50, Math.min(400, startVB.w / zoomFactor));
+      const newH = Math.max(60, Math.min(490, startVB.h / zoomFactor));
+
+      currentVB.w = newW;
+      currentVB.h = newH;
+      currentVB.x = Math.max(0, Math.min(startVB.x - dx, 400 - newW));
+      currentVB.y = Math.max(0, Math.min(startVB.y - dy, 490 - newH));
+      updateSvgViewBox();
     }
   }, { passive: false });
 
@@ -950,9 +991,10 @@ function attachMapEvents() {
   });
 }
 
-// 탭 및 날짜 전환 함수
 function switchDay(idx) {
   day = idx;
+  // 날짜 전환 시 즉시 해당 날짜에 맞춰 Fit 계산 후 렌더링
+  fitCurrentRoute();
   render();
 }
 
@@ -975,15 +1017,11 @@ function render() {
 
   if (tab === 0) {
     attachMapEvents();
-    // 브라우저가 화면 요소를 완전히 배치한 직후 확실하게 경로에 맞춰 확대 실행
-    requestAnimationFrame(() => {
-      fitCurrentRoute();
-    });
   }
 }
 
 try {
-  const L = localStorage.getItem("guam_trip_final_v6");
+  const L = localStorage.getItem("guam_trip_final_v7");
   if (L) {
     const parsed = JSON.parse(L);
     if (parsed && Array.isArray(parsed.days)) {
@@ -992,6 +1030,8 @@ try {
   }
 } catch (e) {}
 
+// 초기 실행 시 첫 날짜에 맞춰 즉시 Fit 계산
+fitCurrentRoute();
 render();
 </script>
 </body>
