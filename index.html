@@ -1,706 +1,388 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>혜민이와 은주의 괌 여행</title>
-  <style>
-    :root {
-      --bg: #f4f8fc;
-      --cd: #ffffff;
-      --tx: #1d2f45;
-      --mu: #6d8299;
-      --ac: #2563eb;
-      --ac-hover: #1d4ed8;
-      --ln: #e0eaf3;
-      --wa: #ef4444;
-      --yl: #fef3c7;
-      --yt: #92400e;
-      --g: var(--ac);
-      --sh: 0 4px 16px rgba(30, 70, 120, 0.08);
-      box-sizing: border-box;
-      padding-top: env(safe-area-inset-top, 0px);
-      padding-bottom: env(safe-area-inset-bottom, 0px);
-    }
-    @media (prefers-color-scheme: dark) {
-      :root:not([data-theme="light"]) {
-        --bg: #0f172a;
-        --cd: #1e293b;
-        --tx: #f1f5f9;
-        --mu: #94a3b8;
-        --ac: #38bdf8;
-        --ac-hover: #0ea5e9;
-        --ln: #334155;
-        --wa: #f87171;
-        --yl: #3f2c06;
-        --yt: #fcd34d;
-        --sh: none;
-      }
-    }
-    * { box-sizing: border-box; }
-    body {
-      margin: 0;
-      background: var(--bg);
-      color: var(--tx);
-      font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
-    }
-    .w {
-      max-width: 680px;
-      margin: 0 auto;
-      padding: 16px 14px 40px;
-    }
-    .hero {
-      padding: 6px 2px 10px;
-    }
-    h1 {
-      font-size: 26px;
-      margin: 0 0 6px;
-      letter-spacing: -0.5px;
-      font-weight: 800;
-    }
-    .sub {
-      color: var(--mu);
-      font-size: 13px;
-      line-height: 1.5;
-    }
-    #stt {
-      font-size: 11px;
-      color: var(--yt);
-      background: var(--yl);
-      border-radius: 99px;
-      padding: 2px 8px;
-      font-weight: 600;
-      display: inline-block;
-    }
-    nav {
-      display: flex;
-      gap: 8px;
-      overflow-x: auto;
-      margin: 14px 0;
-      padding: 2px;
-      scrollbar-width: none;
-    }
-    nav::-webkit-scrollbar { display: none; }
-    nav button, .chip {
-      border: 0;
-      background: var(--cd);
-      color: var(--tx);
-      border-radius: 999px;
-      padding: 8px 18px;
-      font: inherit;
-      font-weight: 600;
-      cursor: pointer;
-      white-space: nowrap;
-      box-shadow: var(--sh);
-      transition: background 0.15s, color 0.15s;
-    }
-    nav button.on, .chip.on {
-      background: var(--ac);
-      color: #fff;
-    }
-    .card {
-      background: var(--cd);
-      border: 1px solid var(--ln);
-      border-radius: 18px;
-      padding: 16px;
-      margin-bottom: 12px;
-      box-shadow: var(--sh);
-    }
-    input, select {
-      font: inherit;
-      color: var(--tx);
-      background: var(--bg);
-      border: 1px solid transparent;
-      border-radius: 10px;
-      padding: 8px 10px;
-      min-width: 0;
-    }
-    input:focus, select:focus {
-      outline: 2px solid var(--ac);
-      background: var(--cd);
-    }
-    .row {
-      display: grid;
-      gap: 6px;
-      align-items: center;
-    }
-    .st {
-      grid-template-columns: 75px 1fr 30px;
-    }
-    .sm {
-      font-size: 12px;
-      color: var(--mu);
-    }
-    .x {
-      border: 0;
-      background: none;
-      color: var(--mu);
-      cursor: pointer;
-      font-size: 20px;
-      line-height: 1;
-      padding: 4px;
-    }
-    .x:hover { color: var(--wa); }
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      border: 0;
-      background: var(--ac);
-      color: #fff;
-      border-radius: 999px;
-      padding: 11px 18px;
-      font: inherit;
-      font-weight: 600;
-      text-decoration: none;
-      cursor: pointer;
-      box-shadow: var(--sh);
-      transition: background 0.15s;
-      text-align: center;
-    }
-    .btn:hover { background: var(--ac-hover); }
-    .btn.g {
-      background: none;
-      color: var(--ac);
-      border: 1.5px solid var(--ac);
-      box-shadow: none;
-    }
-    .btn.export {
-      background: #059669;
-      color: #fff;
-      width: 100%;
-      font-size: 15px;
-      padding: 13px;
-    }
-    .btn.export:hover { background: #047857; }
-    .tot {
-      font-size: 28px;
-      font-weight: 800;
-      color: var(--ac);
-      letter-spacing: -0.5px;
-    }
-    table { width: 100%; border-collapse: collapse; }
-    td { padding: 5px 3px; }
-    .bar {
-      height: 8px;
-      background: var(--ln);
-      border-radius: 9px;
-      overflow: hidden;
-    }
-    .bar i {
-      display: block;
-      height: 100%;
-      background: var(--ac);
-      border-radius: 9px;
-      transition: width 0.3s;
-    }
-    .ov { overflow-x: auto; }
-    .map {
-      width: 100%;
-      height: auto;
-      background: var(--cd);
-      border-radius: 18px;
-      border: 1px solid var(--ln);
-      box-shadow: var(--sh);
-      display: block;
-      margin: 8px auto 0;
-    }
-    .geo-btn {
-      font-size: 11px;
-      padding: 5px 8px;
-      border-radius: 8px;
-      background: var(--ln);
-      color: var(--tx);
-      border: 0;
-      cursor: pointer;
-      white-space: nowrap;
-    }
-    .geo-btn:hover { background: var(--ac); color: #fff; }
-    .toast {
-      position: fixed;
-      bottom: 24px;
-      left: 50%;
-      transform: translateX(-50%) translateY(100px);
-      background: #1e293b;
-      color: #fff;
-      padding: 8px 16px;
-      border-radius: 99px;
-      font-size: 13px;
-      font-weight: 500;
-      box-shadow: 0 4px 14px rgba(0,0,0,0.25);
-      transition: transform 0.2s, opacity 0.2s;
-      opacity: 0;
-      pointer-events: none;
-      z-index: 9999;
-    }
-    .toast.show {
-      transform: translateX(-50%) translateY(0);
-      opacity: 1;
-    }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>괌 여행 플래너</title>
+<style>
+:root{--bg:#f4f8fc;--cd:#fff;--tx:#1d2f45;--mu:#6d8299;--ac:#3a86d6;--ln:#e0eaf3;--sh:0 6px 18px rgba(30,70,120,.07);box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#101a28;--cd:#182638;--tx:#e8f0f8;--mu:#96aac0;--ac:#6aaaf0;--ln:#27394f;--sh:none}}
+:root[data-theme="dark"]{--bg:#101a28;--cd:#182638;--tx:#e8f0f8;--mu:#96aac0;--ac:#6aaaf0;--ln:#27394f;--sh:none}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.5 -apple-system,"Apple SD Gothic Neo","Noto Sans KR",sans-serif}
+.w{max-width:760px;margin:0 auto;padding:16px}
+.hero{padding:6px 2px}h1{font-size:26px;margin:0 0 4px;letter-spacing:-.5px}.sub{color:var(--mu);font-size:13px}
+nav{display:flex;gap:8px;overflow-x:auto;margin:16px 0;padding:2px}
+nav button,.chip{border:0;background:var(--cd);color:var(--tx);border-radius:999px;padding:8px 16px;font:inherit;font-weight:600;cursor:pointer;white-space:nowrap;box-shadow:var(--sh)}
+nav button.on,.chip.on{background:var(--ac);color:#fff}
+.card{background:var(--cd);border:1px solid var(--ln);border-radius:20px;padding:16px;margin-bottom:12px;box-shadow:var(--sh)}
+input,select{font:inherit;color:var(--tx);background:var(--bg);border:1px solid transparent;border-radius:12px;padding:8px 10px;min-width:0}input:focus,select:focus{outline:2px solid var(--ac)}
+.row{display:grid;gap:6px;align-items:center}
+.st{grid-template-columns:70px 1fr 32px}
+.sm{font-size:12px;color:var(--mu)}
+.x{border:0;background:none;color:var(--mu);cursor:pointer;font-size:18px}
+.btn{display:inline-block;border:0;background:var(--ac);color:#fff;border-radius:999px;padding:10px 18px;font:inherit;font-weight:600;text-decoration:none;cursor:pointer;text-align:center}
+.btn.g{background:none;color:var(--ac);border:1.5px solid var(--ac)}
+.btn.export{background:#10b981;color:#fff;width:100%;font-size:16px;padding:14px}
+.tot{font-size:30px;font-weight:800;color:var(--ac);letter-spacing:-1px}
+table{width:100%;border-collapse:collapse}td{padding:4px 3px}
+.bar{height:8px;background:var(--ln);border-radius:9px;overflow:hidden}.bar i{display:block;height:100%;background:var(--ac);border-radius:9px}
+.ov{overflow-x:auto}
+.map{width:100%;height:auto;background:var(--cd);border-radius:20px;border:1px solid var(--ln);box-shadow:var(--sh)}
+</style>
 </head>
 <body>
 <div class="w">
   <div class="hero">
-    <h1>🌴 혜민이와 은주의 괌 여행 🩵</h1>
-    <div class="sub">
-      12/4(금) 08:00 출발 → 12/10(목) 02:50 귀국편 · 2명 · <span id="stt">저장됨 ✓</span>
-    </div>
+    <h1>🌴 괌 여행 플래너</h1>
+    <div class="sub">12/5(토) 출발 → 12/10(목) 02:50 귀국편 · 2명</div>
   </div>
-
   <nav id="nav"></nav>
   <div id="v"></div>
-
-  <div style="margin-top:28px;padding-top:16px;border-top:1px dashed var(--ln)">
+  
+  <div style="margin-top:24px;padding-top:16px;border-top:1px dashed var(--ln)">
     <button class="btn export" onclick="exportHtml()">📥 수정한 HTML 내보내기 (다운로드)</button>
-    <div class="sm" style="text-align:center;margin-top:8px">
-      여기서 수정한 내용이 기본값으로 포함된 <b>index.html</b>이 다운로드됩니다. GitHub에 바로 올리시면 됩니다!
-    </div>
+    <div class="sm" style="text-align:center;margin-top:8px">웹에서 수정한 내용이 기본값으로 포함된 새 <b>index.html</b> 파일이 저장됩니다.</div>
   </div>
 </div>
-
-<div id="toast" class="toast"></div>
 
 <script>
 const TABS = ["일정", "예산", "준비물", "예약"];
 
-// 기본 데이터 (12/4 금요일 제외, 12/5 토요일부터 시작)
+// 소수점 4자리 정밀 좌표가 반영된 기본 데이터
 let S = {
   days: [
     {
       d: "12/5 (토)",
       s: [
-        { t: "01:40", n: "괌 공항", m: "입국 심사", a: 13.4840, o: 144.7960 },
-        { t: "03:00", n: "괌 플라자 리조트", m: "체크인", a: 13.5200, o: 144.8030 }
+        {t: "01:10", n: "괌 공항 도착", m: "입국 심사, 렌터카·픽업", a: 13.4839, o: 144.7972},
+        {t: "10:00", n: "투몬 비치", m: "해변 산책, 아침", a: 13.5152, o: 144.8058},
+        {t: "17:00", n: "투몬 샌드캐슬 쇼", m: "예약 필요", a: 13.5173, o: 144.8062}
       ]
     },
     {
       d: "12/6 (일)",
       s: [
-        { t: "09:00", n: "괌 플라자 리조트", m: "기상", a: 13.5200, o: 144.8030 }
+        {t: "10:00", n: "괌 언더워터 월드", m: "", a: 13.5165, o: 144.8068},
+        {t: "14:00", n: "괌 프리미어 아울렛", m: "쇼핑", a: 13.4989, o: 144.7749},
+        {t: "19:00", n: "투몬 비치", m: "저녁 식사 및 선셋", a: 13.5152, o: 144.8058}
       ]
     },
     {
       d: "12/7 (월)",
       s: [
-        { t: "09:00", n: "괌 플라자 리조트", m: "기상", a: 13.5200, o: 144.8030 },
-        { t: "11:00", n: "괌 플라자 리조트", m: "체크아웃", a: 13.5200, o: 144.8030 }
+        {t: "09:30", n: "피시아이 마린파크", m: "스노클링", a: 13.4646, o: 144.6934},
+        {t: "13:00", n: "솔레다드 요새", m: "우마탁 남부 드라이브", a: 13.2974, o: 144.6612},
+        {t: "16:00", n: "탈로포포 폭포", m: "", a: 13.3276, o: 144.7533}
       ]
     },
     {
       d: "12/8 (화)",
       s: [
-        { t: "09:00", n: "RIHGA ROYAL LAGUNA GUAM RESORT", m: "기상", a: 13.4900, o: 144.700 },
-        { t: "10:00", n: "두 연인의 절벽", m: "사랑의 절벽 전망대", a: 13.5262, o: 144.8113 },
-        { t: "13:00", n: "리티디안 포인트", m: "북부 청정 자연 해변", a: 13.6437, o: 144.8530 },
-        { t: "18:00", n: "프로아 BBQ", m: "저녁 식사", a: 13.5075, o: 144.7930 }
+        {t: "10:00", n: "사랑의 절벽", m: "전망대 관람", a: 13.5342, o: 144.8028},
+        {t: "13:00", n: "리티디안 포인트", m: "북부 청정 해변", a: 13.6552, o: 144.8610},
+        {t: "18:00", n: "케이마트", m: "기념품 장보기", a: 13.5042, o: 144.8055}
       ]
     },
     {
       d: "12/9 (수)",
       s: [
-        { t: "09:00", n: "RIHGA ROYAL LAGUNA GUAM RESORT", m: "기상", a: 13.4900, o: 144.700},
-        { t: "11:00", n: "마이크로네시아몰", m: "기념품 및 선물 쇼핑", a: 13.5230, o: 144.8210 },
-        { t: "18:00", n: "차모로 빌리지", m: "수요일 야시장 바비큐", a: 13.4770, o: 144.7510 },
-        { t: "23:00", n: "괌 공항", m: "렌터카 반납 및 출국 체크인", a: 13.4840, o: 144.7960 }
+        {t: "11:00", n: "마이크로네시아 몰", m: "쇼핑", a: 13.5238, o: 144.8175},
+        {t: "18:00", n: "차모로 빌리지 야시장", m: "수요일 밤 열림", a: 13.4772, o: 144.7523},
+        {t: "23:00", n: "괌 공항 도착", m: "렌터카 반납 및 체크인", a: 13.4839, o: 144.7972}
       ]
     },
     {
       d: "12/10 (목)",
       s: [
-        { t: "02:50", n: "괌 공항 출발", m: "귀국편 항공 탑승", a: 13.4840, o: 144.7960 },
-        { t: "06:40", n: "인천공항 도착", m: "입국 완료", a: "", o: "" }
+        {t: "02:50", n: "괌 공항 출발 (귀국편)", m: "인천행", a: 13.4839, o: 144.7972}
       ]
     }
   ],
   bud: [
-    { n: "항공권", a: 950000, c: "KRW", k: "교통" },
-    { n: "숙소", a: 1200000, c: "KRW", k: "숙박" },
-    { n: "렌터카", a: 320, c: "USD", k: "교통" },
-    { n: "식비", a: 450, c: "USD", k: "식비" },
-    { n: "입장료·투어", a: 160, c: "USD", k: "액티비티" },
-    { n: "쇼핑", a: 200, c: "USD", k: "쇼핑" }
+    {n: "항공권", a: 0, c: "KRW", k: "교통"},
+    {n: "숙소", a: 0, c: "KRW", k: "숙박"},
+    {n: "렌터카", a: 0, c: "USD", k: "교통"},
+    {n: "식비", a: 0, c: "USD", k: "식비"},
+    {n: "입장료·투어", a: 0, c: "USD", k: "액티비티"},
+    {n: "쇼핑", a: 0, c: "USD", k: "쇼핑"}
   ],
-  rate: 1400,
-  pax: 2,
+  rate: 1400, pax: 2,
   chk: [
-    { g: "필수", i: [["여권 (유효기간 6개월 이상)", 0], ["항공권 E-Ticket 및 호텔 바우처", 0], ["전자세관신고서(Guam EDF) 작성", 0], ["해외결제 신용카드 및 현금 USD", 0], ["여행자 보험 가입증명서", 0]] },
-    { g: "전자기기", i: [["110V 돼지코 어댑터", 0], ["휴대폰 충전기 및 보조배터리", 0], ["eSIM / 로밍 설정", 0], ["방수팩", 0]] },
-    { g: "해변·액티비티", i: [["수영복 / 래시가드", 0], ["선크림 (SPF 50+) 및 선글라스", 0], ["아쿠아슈즈 및 스노클 장비", 0], ["비치타월", 0]] },
-    { g: "기타", i: [["상비약", 0], ["국제운전면허증 및 국내면허증", 0], ["가벼운 바람막이 겉옷", 0]] }
+    {g: "필수", i: [["여권 (유효기간 6개월 이상)", 0], ["항공권·예약 확인서", 0], ["여행자 보험", 0], ["ESTA/입국 서류 확인", 0], ["신용카드·현금 USD", 0]]},
+    {g: "전자기기", i: [["휴대폰 충전기·보조배터리", 0], ["돼지코(110V 어댑터)", 0], ["이심/로밍 설정", 0]]},
+    {g: "해변·액티비티", i: [["수영복·래시가드", 0], ["선크림·모자·선글라스", 0], ["아쿠아슈즈·스노클", 0], ["방수팩", 0]]},
+    {g: "기타", i: [["상비약", 0], ["국제운전면허증", 0], ["우산·가벼운 겉옷", 0]]}
   ],
   res: [
-    { k: "항공", n: "괌 → 인천", w: "12/10 (목) 02:50", no: "KE422", m: "공항 2시간 반 전 도착" }
+    {k: "항공", n: "괌 → 인천", w: "12/10 (목) 02:50", no: "", m: ""},
+    {k: "숙소", n: "", w: "12/5 ~ 12/9", no: "", m: ""},
+    {k: "렌터카", n: "", w: "", no: "", m: ""}
   ]
 };
 
 let tab = 0, day = 0, zm = 0;
-
 const $ = s => document.querySelector(s);
-const E = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const E = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;"}[c]));
 
-function toast(msg) {
-  const t = $("#toast");
-  if (!t) return;
-  t.textContent = msg;
-  t.classList.add("show");
-  setTimeout(() => t.classList.remove("show"), 2000);
-}
+try {
+  const local = localStorage.getItem("guam_data");
+  if (local) S = JSON.parse(local);
+} catch(e) {}
 
 function save() {
-  try {
-    localStorage.setItem("guam_trip_v2", JSON.stringify(S));
-    const stt = $("#stt");
-    if (stt) stt.textContent = "저장됨 ✓";
-  } catch (e) {}
+  try { localStorage.setItem("guam_data", JSON.stringify(S)); } catch(e) {}
 }
 
 function up(f) {
-  if (typeof f === "function") f();
+  f();
   save();
   render();
 }
 
-// 괌 주요 장소 자동 좌표 사전
+function render() {
+  $("#nav").innerHTML = TABS.map((t, i) => `<button class="${i === tab ? "on" : ""}" onclick="tab=${i};render()">${t}</button>`).join("");
+  $("#v").innerHTML = [vSch, vBud, vChk, vRes][tab]();
+}
+
+// 괌 주요 장소 소수점 4자리 정밀 좌표 데이터베이스
 const GUAM_GEO = {
-  "공항": [13.4840, 144.7960], "괌공항": [13.4840, 144.7960], "원팻": [13.4840, 144.7960],
-  "투몬": [13.5150, 144.8050], "투몬비치": [13.5200, 144.8030],
-  "샌드캐슬": [13.5170, 144.8040], "언더워터": [13.5130, 144.8040], "언더워터월드": [13.5130, 144.8040],
-  "gpo": [13.5130, 144.8010], "프리미어아울렛": [13.5130, 144.8010], "아울렛": [13.5130, 144.8010],
-  "피시아이": [13.4640, 144.6910], "피시아이마린파크": [13.4640, 144.6910],
-  "우마탁": [13.2970, 144.6640], "우마탁요새": [13.2970, 144.6640], "솔레다드": [13.2970, 144.6640],
-  "탈로포포": [13.3300, 144.7510], "탈로포포폭포": [13.3300, 144.7510],
-  "사랑의절벽": [13.5262, 144.8113], "두연인의절벽": [13.5262, 144.8113],
-  "리티디안": [13.6437, 144.8530], "리티디안포인트": [13.6437, 144.8530],
-  "차모로": [13.4770, 144.7510], "차모로빌리지": [13.4770, 144.7510], "야시장": [13.4770, 144.7510],
-  "두짓타니": [13.5165, 144.8050], "하얏트": [13.5180, 144.8060],
-  "케이마트": [13.5070, 144.8015], "kmart": [13.5070, 144.8015],
-  "마이크로네시아몰": [13.5230, 144.8210], "t갤러리아": [13.5140, 144.8055],
-  "비치인쉬림프": [13.5190, 144.8050], "프로아": [13.5075, 144.7930]
+  "공항": [13.4839, 144.7972],
+  "괌공항": [13.4839, 144.7972],
+  "투몬": [13.5152, 144.8058],
+  "투몬비치": [13.5152, 144.8058],
+  "샌드캐슬": [13.5173, 144.8062],
+  "언더워터월드": [13.5165, 144.8068],
+  "수족관": [13.5165, 144.8068],
+  "gpo": [13.4989, 144.7749],
+  "프리미어아울렛": [13.4989, 144.7749],
+  "아울렛": [13.4989, 144.7749],
+  "피시아이": [13.4646, 144.6934],
+  "해양공원": [13.4646, 144.6934],
+  "우마탁": [13.2974, 144.6612],
+  "솔레다드": [13.2974, 144.6612],
+  "요새": [13.2974, 144.6612],
+  "탈로포포": [13.3276, 144.7533],
+  "폭포": [13.3276, 144.7533],
+  "사랑의절벽": [13.5342, 144.8028],
+  "두연인의절벽": [13.5342, 144.8028],
+  "절벽": [13.5342, 144.8028],
+  "리티디안": [13.6552, 144.8610],
+  "차모로": [13.4772, 144.7523],
+  "야시장": [13.4772, 144.7523],
+  "이나라한": [13.2755, 144.7497],
+  "천연수영장": [13.2755, 144.7497],
+  "자연풀장": [13.2755, 144.7497],
+  "케이마트": [13.5042, 144.8055],
+  "kmart": [13.5042, 144.8055],
+  "마이크로네시아몰": [13.5238, 144.8175],
+  "두짓타니": [13.5161, 144.8063],
+  "하얏트": [13.5144, 144.8049]
 };
 
-async function autoFindCoords(dIdx, sIdx, name) {
-  if (!name || !name.trim()) return;
-  const clean = name.trim().toLowerCase().replace(/[^a-z0-9가-힣]/g, "");
-
-  for (const [k, c] of Object.entries(GUAM_GEO)) {
-    if (clean.includes(k)) {
-      if (S.days[dIdx]?.s[sIdx]) {
-        S.days[dIdx].s[sIdx].a = c[0];
-        S.days[dIdx].s[sIdx].o = c[1];
-        toast(`'${name}' 좌표 자동 등록 완료`);
-        up();
-        return;
-      }
+function autoFindCoords(dIdx, sIdx, val) {
+  S.days[dIdx].s[sIdx].n = val;
+  const clean = val.toLowerCase().replace(/[^a-z0-9가-힣]/g, "");
+  for (let key in GUAM_GEO) {
+    if (clean.includes(key)) {
+      S.days[dIdx].s[sIdx].a = GUAM_GEO[key][0];
+      S.days[dIdx].s[sIdx].o = GUAM_GEO[key][1];
+      save();
+      render();
+      return;
     }
   }
-
-  // Fallback: 외부 지오코딩 API
-  try {
-    const q = encodeURIComponent(`${name} Guam`);
-    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${q}&limit=1`, {
-      headers: { "Accept-Language": "ko,en" }
-    });
-    const data = await res.json();
-    if (data && data.length > 0) {
-      const lat = parseFloat(parseFloat(data[0].lat).toFixed(4));
-      const lon = parseFloat(parseFloat(data[0].lon).toFixed(4));
-      if (S.days[dIdx]?.s[sIdx]) {
-        S.days[dIdx].s[sIdx].a = lat;
-        S.days[dIdx].s[sIdx].o = lon;
-        toast(`'${name}' 좌표 검색 완료: ${lat}, ${lon}`);
-        up();
-      }
-    } else {
-      toast(`'${name}' 좌표를 찾지 못했습니다.`);
-    }
-  } catch (e) {
-    toast("좌표 검색 실패");
-  }
-}
-
-// 괌 섬 외곽선 SVG 데이터
-const GU = [
-  [144.853, 13.644], [144.890, 13.640], [144.940, 13.615], [144.966, 13.600],
-  [144.945, 13.568], [144.905, 13.540], [144.880, 13.520], [144.860, 13.495],
-  [144.835, 13.480], [144.810, 13.455], [144.790, 13.425], [144.780, 13.395],
-  [144.775, 13.350], [144.755, 13.310], [144.730, 13.285], [144.700, 13.255],
-  [144.665, 13.235], [144.640, 13.250], [144.640, 13.290], [144.650, 13.335],
-  [144.645, 13.385], [144.620, 13.430], [144.640, 13.455], [144.695, 13.460],
-  [144.730, 13.470], [144.750, 13.485], [144.775, 13.500], [144.795, 13.518],
-  [144.812, 13.528], [144.820, 13.565], [144.838, 13.605]
-];
-
-// 구글맵 표준 Directions 링크 생성
-function getGoogleMapsUrl(dayIndex) {
-  const currentDay = S.days[dayIndex];
-  if (!currentDay || !currentDay.s) return "";
-
-  const validStops = currentDay.s.filter(s => (s.a !== "" && s.o !== "" && s.a != null) || (s.n && s.n.trim()));
-  if (validStops.length < 2) return "";
-
-  const formatStop = s => {
-    if (s.a !== "" && s.o !== "" && s.a != null) return `${s.a},${s.o}`;
-    return encodeURIComponent(s.n.trim() + " Guam");
-  };
-
-  const origin = formatStop(validStops[0]);
-  const destination = formatStop(validStops[validStops.length - 1]);
-  let url = `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}&travelmode=driving`;
-
-  if (validStops.length > 2) {
-    const waypoints = validStops.slice(1, -1).map(formatStop).join("|");
-    url += `&waypoints=${waypoints}`;
-  }
-  return url;
-}
-
-// 괌 SVG 동선 지도 컴포넌트
-function vMap() {
-  const d = S.days[day];
-  const P = d.s.filter(s => 
-    s.a !== "" && s.o !== "" && s.a != null &&
-    s.a >= 13.1 && s.a <= 13.8 && s.o >= 144.5 && s.o <= 145.1
-  );
-
-  const gmapsLink = getGoogleMapsUrl(day);
-
-  const W = 400, H = 490;
-  const k = Math.cos(13.45 * Math.PI / 180);
-  let x0 = 144.60, x1 = 145.0, y0 = 13.20, y1 = 13.68;
-
-  if (zm && P.length) {
-    const xs = P.map(p => p.o);
-    const ys = P.map(p => p.a);
-    const mx = Math.min(...xs), Mx = Math.max(...xs);
-    const my = Math.min(...ys), My = Math.max(...ys);
-    const h = Math.max((My - my) * 1.6, (Mx - mx) * 1.6 * k * H / W, 0.06);
-    const w = h * W / H / k;
-    const cx = (mx + Mx) / 2, cy = (my + My) / 2;
-    x0 = cx - w / 2; x1 = cx + w / 2;
-    y0 = cy - h / 2; y1 = cy + h / 2;
-  }
-
-  const pr = (o, a) => [(o - x0) / (x1 - x0) * W, (y1 - a) / (y1 - y0) * H];
-  const c = P.map(p => pr(p.o, p.a));
-  const g = GU.map(p => pr(p[0], p[1]).map(v => v.toFixed(1)).join(",")).join(" ");
-
-  const svg = `
-    <svg class="map" style="max-width:440px;" viewBox="0 0 ${W} ${H}">
-      <rect width="${W}" height="${H}" fill="var(--ln)"/>
-      <polygon points="${g}" fill="var(--cd)" stroke="var(--mu)" stroke-width="1.5" stroke-linejoin="round"/>
-      ${c.length > 1 ? `<polyline points="${c.map(a => a.join(",")).join(" ")}" fill="none" stroke="#ec4899" stroke-width="2.5" stroke-dasharray="6 4"/>` : ""}
-      ${c.map((a, i) => {
-        const isRight = a[0] > W * 0.6;
-        return `
-          <circle cx="${a[0]}" cy="${a[1]}" r="12" fill="#ec4899" stroke="var(--cd)" stroke-width="2"/>
-          <text x="${a[0]}" y="${a[1] + 4}" text-anchor="middle" fill="#fff" font-size="11" font-weight="700">${i + 1}</text>
-          <text x="${a[0] + (isRight ? -15 : 15)}" y="${a[1] + 4}" text-anchor="${isRight ? "end" : "start"}" fill="var(--tx)" font-size="11" font-weight="600" paint-order="stroke" stroke="var(--cd)" stroke-width="3">${E(P[i].n)}</text>
-        `;
-      }).join("")}
-      <text x="12" y="24" fill="var(--mu)" font-size="11" font-weight="700">GUAM ISLAND N ↑</text>
-    </svg>
-  `;
-
-  return `
-    <div style="display:flex;justify-content:space-between;align-items:center;margin:18px 0 6px;">
-      <h3 style="margin:0;font-size:16px;">🗺️ 이 날의 동선 지도 (${E(d.d)})</h3>
-      <button class="chip ${zm ? "on" : ""}" style="font-size:12px;padding:4px 12px;" onclick="zm = zm ? 0 : 1; render();">
-        🔍 ${zm ? "전체 보기" : "경로 확대"}
-      </button>
-    </div>
-
-    ${svg}
-
-    ${P.length === 0 ? `
-      <div class="sm" style="margin-top:8px;text-align:center;padding:10px;background:var(--cd);border-radius:12px;border:1px solid var(--ln);">
-        이 날은 등록된 장소가 없습니다. 일정을 추가하거나 위도/경도를 확인해주세요.
-      </div>
-    ` : `
-      <div class="card" style="margin-top:10px;">
-        <div style="font-size:13px;line-height:1.8;">
-          ${P.map((p, i) => `
-            <div><b>${i + 1}.</b> <span class="sm">${E(p.t || "--:--")}</span> ${E(p.n)} ${p.m ? `<span class="sm">(${E(p.m)})</span>` : ""}</div>
-          `).join("")}
-        </div>
-      </div>
-    `}
-
-    <div style="margin-top:10px;">
-      ${gmapsLink ? `
-        <a class="btn" style="width:100%" target="_blank" rel="noopener noreferrer" href="${gmapsLink}">
-          구글맵에서 이 날 전체 경로 열기 ↗
-        </a>
-      ` : `
-        <div class="sm" style="text-align:center;color:var(--mu);margin-top:6px;">
-          장소가 2곳 이상이면 구글맵 경로 열기 링크가 활성화됩니다.
-        </div>
-      `}
-    </div>
-  `;
+  save();
 }
 
 // 1. 일정 탭
 function vSch() {
   const curDay = S.days[day];
   return `
-    <div style="display:flex;gap:6px;overflow-x:auto;margin-bottom:12px;padding-bottom:2px;">
-      ${S.days.map((d, i) => `
-        <button class="chip ${i === day ? "on" : ""}" onclick="day = ${i}; render();">${E(d.d)}</button>
-      `).join("")}
+    <div style="display:flex;gap:6px;overflow-x:auto;margin-bottom:10px">
+      ${S.days.map((d, i) => `<button class="chip ${i === day ? "on" : ""}" onclick="day=${i};render()">${E(d.d)}</button>`).join("")}
     </div>
-
     <div class="card">
       ${curDay.s.map((s, j) => `
-        <div style="border-bottom:1px solid var(--ln);padding:10px 0;">
+        <div style="border-bottom:1px solid var(--ln);padding:10px 0">
           <div class="row st">
-            <input value="${E(s.t)}" placeholder="10:00" onchange="up(() => S.days[${day}].s[${j}].t = this.value)">
-            <input value="${E(s.n)}" placeholder="장소명 입력시 좌표 자동검색" style="font-weight:600" 
-              onchange="const val = this.value; up(() => S.days[${day}].s[${j}].n = val); if(!S.days[${day}].s[${j}].a) autoFindCoords(${day}, ${j}, val);">
-            <button class="x" title="삭제" onclick="up(() => S.days[${day}].s.splice(${j}, 1))">×</button>
+            <input value="${E(s.t)}" placeholder="시간" onchange="up(()=>S.days[day].s[${j}].t=this.value)">
+            <input value="${E(s.n)}" placeholder="장소 / 할 일 입력시 좌표 자동검색" onchange="autoFindCoords(${day},${j},this.value)">
+            <button class="x" onclick="up(()=>S.days[day].s.splice(${j},1))">×</button>
           </div>
-
-          <div class="row" style="grid-template-columns:1fr 75px 75px auto;margin-top:6px;">
-            <input value="${E(s.m)}" placeholder="메모" onchange="up(() => S.days[${day}].s[${j}].m = this.value)">
-            <input type="number" step="any" value="${E(s.a)}" placeholder="위도" onchange="up(() => S.days[${day}].s[${j}].a = this.value === '' ? '' : +this.value)">
-            <input type="number" step="any" value="${E(s.o)}" placeholder="경도" onchange="up(() => S.days[${day}].s[${j}].o = this.value === '' ? '' : +this.value)">
-            <button class="geo-btn" title="장소명으로 좌표 다시 찾기" onclick="autoFindCoords(${day}, ${j}, S.days[${day}].s[${j}].n)">📍 자동</button>
+          <div class="row" style="grid-template-columns:1fr 85px 85px;margin-top:6px">
+            <input value="${E(s.m)}" placeholder="메모" onchange="up(()=>S.days[day].s[${j}].m=this.value)">
+            <input type="number" step="0.0001" value="${s.a !== '' && s.a != null ? Number(s.a).toFixed(4) : ''}" placeholder="위도" onchange="up(()=>S.days[day].s[${j}].a=this.value===''?'':+this.value)">
+            <input type="number" step="0.0001" value="${s.o !== '' && s.o != null ? Number(s.o).toFixed(4) : ''}" placeholder="경도" onchange="up(()=>S.days[day].s[${j}].o=this.value===''?'':+this.value)">
           </div>
         </div>
       `).join("")}
-
-      <button class="btn g" style="margin-top:12px;width:100%" onclick="up(() => S.days[${day}].s.push({ t: '', n: '', m: '', a: '', o: '' }))">
-        + 새 일정 추가
-      </button>
+      <button class="btn g" style="margin-top:12px;width:100%" onclick="up(()=>S.days[day].s.push({t:'',n:'',m:'',a:'',o:''}))">+ 새 일정 추가</button>
     </div>
-
-    <div class="sm" style="margin-bottom:12px;">
-      💡 괌 주요 명소(투몬, 공항, GPO, 피시아이 등)를 입력하면 좌표가 자동 채워집니다.
-    </div>
-
+    <h3 style="margin:20px 0 8px">🗺️ 이 날의 동선 지도</h3>
     ${vMap()}
   `;
 }
 
-// 2. 예산 탭
-function usd(b) {
-  return b.c === "USD" ? +b.a : +b.a / S.rate;
+// 괌 섬 외곽선
+const GU = [[144.853,13.644],[144.890,13.640],[144.940,13.615],[144.966,13.600],[144.945,13.568],[144.905,13.540],[144.880,13.520],[144.860,13.495],[144.835,13.480],[144.810,13.455],[144.790,13.425],[144.780,13.395],[144.775,13.350],[144.755,13.310],[144.730,13.285],[144.700,13.255],[144.665,13.235],[144.640,13.250],[144.640,13.290],[144.650,13.335],[144.645,13.385],[144.620,13.430],[144.640,13.455],[144.695,13.460],[144.730,13.470],[144.750,13.485],[144.775,13.500],[144.795,13.518],[144.812,13.528],[144.820,13.565],[144.838,13.605]];
+
+function getGoogleMapsUrl(dayIndex) {
+  const points = S.days[dayIndex].s
+    .filter(s => (s.a !== '' && s.o !== '') || s.n)
+    .map(s => (s.a && s.o ? `${Number(s.a).toFixed(4)},${Number(s.o).toFixed(4)}` : encodeURIComponent(s.n + ' Guam')));
+  if (points.length < 2) return '';
+  const origin = points[0];
+  const destination = points[points.length - 1];
+  const waypoints = points.slice(1, -1).join('|');
+  let url = `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${destination}`;
+  if (waypoints) url += `&waypoints=${waypoints}`;
+  return url;
 }
 
+// 2. 동선 지도
+function vMap() {
+  const d = S.days[day];
+  const P = d.s.filter(s => s.a !== "" && s.o !== "" && s.a != null);
+  const link = getGoogleMapsUrl(day);
+
+  const W = 400, H = 494, k = Math.cos(13.45 * Math.PI / 180);
+  let x0 = 144.60, x1 = 145.0, y0 = 13.20, y1 = 13.68;
+  if (zm && P.length) {
+    const xs = P.map(p => p.o), ys = P.map(p => p.a);
+    const mx = Math.min(...xs), Mx = Math.max(...xs), my = Math.min(...ys), My = Math.max(...ys);
+    const h = Math.max((My - my) * 1.6, (Mx - mx) * 1.6 * k * H / W, 0.06);
+    const w = h * W / H / k, cx = (mx + Mx) / 2, cy = (my + My) / 2;
+    x0 = cx - w / 2; x1 = cx + w / 2; y0 = cy - h / 2; y1 = cy + h / 2;
+  }
+  const pr = (o, a) => [(o - x0) / (x1 - x0) * W, (y1 - a) / (y1 - y0) * H];
+  const c = P.map(p => pr(p.o, p.a));
+  const g = GU.map(p => pr(p[0], p[1]).map(v => v.toFixed(1)).join(",")).join(" ");
+
+  const svg = `
+    <svg class="map" style="max-width:420px;display:block;margin:0 auto" viewBox="0 0 ${W} ${H}">
+      <rect width="${W}" height="${H}" fill="var(--ln)"/>
+      <polygon points="${g}" fill="var(--cd)" stroke="var(--mu)" stroke-width="1.5" stroke-linejoin="round"/>
+      ${c.length > 1 ? `<polyline points="${c.map(a => a.join(",")).join(" ")}" fill="none" stroke="#ec5f93" stroke-width="2.5" stroke-dasharray="6 4"/>` : ""}
+      ${c.map((a, i) => {
+        const r = a[0] > W * 0.6;
+        return `
+          <circle cx="${a[0]}" cy="${a[1]}" r="11" fill="#ec5f93" stroke="var(--cd)" stroke-width="2"/>
+          <text x="${a[0]}" y="${a[1] + 4}" text-anchor="middle" fill="#fff" font-size="11" font-weight="700">${i + 1}</text>
+          ${zm ? `<text x="${a[0] + (r ? -16 : 16)}" y="${a[1] + 4}" text-anchor="${r ? "end" : "start"}" fill="var(--tx)" font-size="11" paint-order="stroke" stroke="var(--cd)" stroke-width="3">${E(P[i].n)}</text>` : ""}
+        `;
+      }).join("")}
+      <text x="12" y="24" fill="var(--mu)" font-size="12">N ↑ 괌</text>
+    </svg>
+  `;
+
+  return `
+    <div style="margin-bottom:10px">
+      <button class="chip ${zm ? "on" : ""}" onclick="zm=zm?0:1;render()">🔍 경로 확대</button>
+    </div>
+    ${svg}
+    ${P.length ? "" : `<div class="sm" style="margin-top:8px">이 날은 등록된 장소가 없습니다. 일정을 추가해 주세요.</div>`}
+    <div class="card" style="margin-top:10px">
+      ${P.map((p, i) => `<div>${i + 1}. <b>${E(p.t)}</b> ${E(p.n)} <span class="sm" style="color:var(--mu)">(${Number(p.a).toFixed(4)}, ${Number(p.o).toFixed(4)})</span></div>`).join("") || "-"}
+    </div>
+    ${link ? `<a class="btn" style="width:100%" target="_blank" rel="noopener" href="${link}">구글맵에서 이 날 전체 경로 열기 ↗</a>` : `<div class="sm" style="text-align:center">장소가 2곳 이상이면 구글맵 경로 링크가 열립니다.</div>`}
+  `;
+}
+
+// 3. 예산 탭
+function usd(b) { return b.c === "USD" ? +b.a : +b.a / S.rate; }
 function vBud() {
   const T = S.bud.reduce((s, b) => s + usd(b), 0);
   const cats = {};
   S.bud.forEach(b => cats[b.k] = (cats[b.k] || 0) + usd(b));
-  const f = n => Math.round(n || 0).toLocaleString();
+  const f = n => Math.round(n).toLocaleString();
 
   return `
     <div class="card">
       <div class="sm">총 예산</div>
       <div class="tot">$${f(T)} <span class="sm">≈ ${f(T * S.rate)}원</span></div>
-      <div style="margin-top:6px">1인당 <b>$${f(T / (S.pax || 1))}</b> (${f((T * S.rate) / (S.pax || 1))}원)</div>
+      <div style="margin-top:6px">1인당 <b>$${f(T / S.pax)}</b> (${f(T * S.rate / S.pax)}원)</div>
       <div class="row" style="grid-template-columns:auto 90px auto 60px;margin-top:10px">
-        <span class="sm">환율 1$ =</span>
-        <input type="number" value="${S.rate}" onchange="up(() => S.rate = +this.value || 1400)">
-        <span class="sm">원 · 인원</span>
-        <input type="number" min="1" value="${S.pax}" onchange="up(() => S.pax = +this.value || 1)">
+        <span class="sm">환율 1$ =</span><input type="number" value="${S.rate}" onchange="up(()=>S.rate=+this.value||1400)">
+        <span class="sm">원 · 인원</span><input type="number" min="1" value="${S.pax}" onchange="up(()=>S.pax=+this.value||1)">
       </div>
     </div>
-
     <div class="card ov">
       <table>
         ${S.bud.map((b, i) => `
           <tr>
-            <td><input style="width:100%" value="${E(b.n)}" onchange="up(() => S.bud[${i}].n = this.value)"></td>
-            <td><input type="number" style="width:85px" value="${b.a || ""}" placeholder="0" onchange="up(() => S.bud[${i}].a = +this.value)"></td>
-            <td>
-              <select onchange="up(() => S.bud[${i}].c = this.value)">
-                <option ${b.c === "USD" ? "selected" : ""}>USD</option>
-                <option ${b.c === "KRW" ? "selected" : ""}>KRW</option>
-              </select>
-            </td>
-            <td><input style="width:75px" value="${E(b.k)}" onchange="up(() => S.bud[${i}].k = this.value)"></td>
-            <td><button class="x" onclick="up(() => S.bud.splice(${i}, 1))">×</button></td>
+            <td><input style="width:100%" value="${E(b.n)}" onchange="up(()=>S.bud[${i}].n=this.value)"></td>
+            <td><input type="number" style="width:85px" value="${b.a || ""}" placeholder="0" onchange="up(()=>S.bud[${i}].a=+this.value)"></td>
+            <td><select onchange="up(()=>S.bud[${i}].c=this.value)"><option ${b.c === "USD" ? "selected" : ""}>USD</option><option ${b.c === "KRW" ? "selected" : ""}>KRW</option></select></td>
+            <td><input style="width:70px" value="${E(b.k)}" onchange="up(()=>S.bud[${i}].k=this.value)"></td>
+            <td><button class="x" onclick="up(()=>S.bud.splice(${i},1))">×</button></td>
           </tr>
         `).join("")}
       </table>
-      <button class="btn g" style="margin-top:8px;width:100%" onclick="up(() => S.bud.push({ n: '', a: 0, c: 'USD', k: '기타' }))">+ 항목 추가</button>
+      <button class="btn g" style="margin-top:8px;width:100%" onclick="up(()=>S.bud.push({n:'',a:0,c:'USD',k:'기타'}))">+ 항목 추가</button>
     </div>
-
     <div class="card">
       ${Object.entries(cats).map(([k, v]) => `
-        <div class="sm" style="display:flex;justify-content:space-between;margin-bottom:2px;">
-          <span>${E(k)}</span>
-          <span>$${f(v)}</span>
-        </div>
-        <div class="bar" style="margin-bottom:8px;"><i style="width:${T ? (v / T) * 100 : 0}%"></i></div>
+        <div class="sm">${E(k)} · $${f(v)}</div>
+        <div class="bar" style="margin-bottom:6px"><i style="width:${T ? v / T * 100 : 0}%"></i></div>
       `).join("")}
     </div>
   `;
 }
 
-// 3. 준비물 탭
+// 4. 준비물 탭
 function vChk() {
   let a = 0, n = 0;
   S.chk.forEach(g => g.i.forEach(i => { n++; a += i[1]; }));
-
   return `
     <div class="card">
       <b>준비 진행률 ${a}/${n}</b>
-      <div class="bar" style="margin-top:6px;"><i style="width:${n ? (a / n) * 100 : 0}%"></i></div>
+      <div class="bar" style="margin-top:6px"><i style="width:${n ? a / n * 100 : 0}%"></i></div>
     </div>
-
     ${S.chk.map((g, gi) => `
       <div class="card">
         <b>${E(g.g)}</b>
         ${g.i.map((it, ii) => `
-          <div style="display:flex;gap:8px;align-items:center;padding:5px 0;">
-            <input type="checkbox" ${it[1] ? "checked" : ""} onchange="up(() => S.chk[${gi}].i[${ii}][1] = this.checked ? 1 : 0)">
+          <div style="display:flex;gap:8px;align-items:center;padding:4px 0">
+            <input type="checkbox" ${it[1] ? "checked" : ""} onchange="up(()=>S.chk[${gi}].i[${ii}][1]=this.checked?1:0)">
             <span style="flex:1;${it[1] ? "text-decoration:line-through;color:var(--mu)" : ""}">${E(it[0])}</span>
-            <button class="x" onclick="up(() => S.chk[${gi}].i.splice(${ii}, 1))">×</button>
+            <button class="x" onclick="up(()=>S.chk[${gi}].i.splice(${ii},1))">×</button>
           </div>
         `).join("")}
-        <input placeholder="+ 새 준비물 입력 후 Enter" style="width:100%;margin-top:6px" 
-          onkeydown="if(event.key === 'Enter' && this.value.trim()){ const val = this.value.trim(); up(() => S.chk[${gi}].i.push([val, 0])); this.value = ''; }">
+        <input placeholder="+ 새 준비물 입력 후 Enter" style="width:100%;margin-top:6px" onkeydown="if(event.key==='Enter'&&this.value.trim()){up(()=>S.chk[${gi}].i.push([this.value.trim(),0]));this.value='';}">
       </div>
     `).join("")}
   `;
 }
 
-// 4. 예약 탭
+// 5. 예약 탭
 function vRes() {
   return `
     <div class="card ov">
       <table>
         ${S.res.map((r, i) => `
           <tr>
-            <td colspan="2" style="border-bottom:1px solid var(--ln);padding:8px 0;">
-              <div class="row" style="grid-template-columns:75px 1fr 1fr 28px">
-                <input value="${E(r.k)}" onchange="up(() => S.res[${i}].k = this.value)">
-                <input value="${E(r.n)}" placeholder="이름·구간" onchange="up(() => S.res[${i}].n = this.value)">
-                <input value="${E(r.w)}" placeholder="날짜·시간" onchange="up(() => S.res[${i}].w = this.value)">
-                <button class="x" onclick="up(() => S.res.splice(${i}, 1))">×</button>
+            <td>
+              <div class="row" style="grid-template-columns:60px 1fr 1fr 28px">
+                <input value="${E(r.k)}" onchange="up(()=>S.res[${i}].k=this.value)">
+                <input value="${E(r.n)}" placeholder="이름·구간" onchange="up(()=>S.res[${i}].n=this.value)">
+                <input value="${E(r.w)}" placeholder="날짜·시간" onchange="up(()=>S.res[${i}].w=this.value)">
+                <button class="x" onclick="up(()=>S.res.splice(${i},1))">×</button>
               </div>
-              <div class="row" style="grid-template-columns:1fr 1fr;margin-top:5px">
-                <input value="${E(r.no)}" placeholder="확인번호" onchange="up(() => S.res[${i}].no = this.value)">
-                <input value="${E(r.m)}" placeholder="메모" onchange="up(() => S.res[${i}].m = this.value)">
+              <div class="row" style="grid-template-columns:1fr 1fr;margin:4px 0 12px">
+                <input value="${E(r.no)}" placeholder="확인번호" onchange="up(()=>S.res[${i}].no=this.value)">
+                <input value="${E(r.m)}" placeholder="메모" onchange="up(()=>S.res[${i}].m=this.value)">
               </div>
             </td>
           </tr>
         `).join("")}
       </table>
-      <button class="btn g" style="margin-top:10px;width:100%" onclick="up(() => S.res.push({ k: '', n: '', w: '', no: '', m: '' }))">+ 예약 항목 추가</button>
+      <button class="btn g" style="width:100%" onclick="up(()=>S.res.push({k:'',n:'',w:'',no:'',m:''}))">+ 예약 항목 추가</button>
     </div>
   `;
 }
 
-function render() {
-  $("#nav").innerHTML = TABS.map((t, i) => `
-    <button class="${i === tab ? "on" : ""}" onclick="tab = ${i}; render();">${t}</button>
-  `).join("");
-  $("#v").innerHTML = [vSch, vBud, vChk, vRes][tab]();
-}
-
-// 수정한 현재 데이터를 기본값(S)으로 치환하여 새 index.html 파일 다운로드
+// 수정한 데이터를 기본값(S)으로 주입하여 새 HTML 파일로 다운로드
 function exportHtml() {
   let doc = document.documentElement.outerHTML;
   const regex = /let S\s*=\s*\{[\s\S]*?\n\};/;
@@ -712,16 +394,7 @@ function exportHtml() {
   a.href = URL.createObjectURL(blob);
   a.download = "index.html";
   a.click();
-  toast("index.html 다운로드 완료!");
 }
-
-// 저장된 데이터 로드
-try {
-  const L = localStorage.getItem("guam_trip_v2");
-  if (L) {
-    S = JSON.parse(L);
-  }
-} catch (e) {}
 
 render();
 </script>
