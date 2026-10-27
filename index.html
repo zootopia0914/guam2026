@@ -72,7 +72,7 @@
       display: inline-block;
     }
 
-    /* 상단 고정 탭 바 */
+    /* 상단 고정 헤더 */
     .sticky-header {
       position: sticky;
       top: 0;
@@ -243,7 +243,7 @@
     .map-svg:active {
       cursor: grabbing;
     }
-    /* 지도 우측 하단 컨트롤러 */
+    /* 지도 컨트롤 버튼: 지도 우측 하단 오버레이 */
     .map-controls {
       position: absolute;
       bottom: 12px;
@@ -325,7 +325,6 @@
     </div>
   </div>
 
-  <!-- 상단 고정 네비게이션 & 날짜 탭 바 -->
   <div class="sticky-header">
     <nav id="nav"></nav>
     <div id="subTabs" class="day-bar"></div>
@@ -445,7 +444,7 @@ function toast(msg) {
 
 function save() {
   try {
-    localStorage.setItem("guam_trip_final_v4", JSON.stringify(S));
+    localStorage.setItem("guam_trip_final_v5", JSON.stringify(S));
     const stt = $("#stt");
     if (stt) stt.textContent = "저장됨 ✓";
   } catch (e) {}
@@ -561,7 +560,7 @@ function getGoogleMapsUrl(dayIndex) {
 }
 
 function zoomMap(factor) {
-  mapScale = Math.min(Math.max(0.8, mapScale * factor), 6.0);
+  mapScale = Math.min(Math.max(0.8, mapScale * factor), 6.5);
   applyMapTransform();
 }
 
@@ -571,6 +570,7 @@ function resetMap() {
   applyMapTransform();
 }
 
+// 해당 일차 동선에 맞게 자동 확대 (Fit)
 function fitCurrentRoute() {
   const d = S.days[day];
   const P = d.s.filter(s => s.a !== "" && s.o !== "" && s.a != null);
@@ -589,12 +589,13 @@ function fitCurrentRoute() {
   const minX = Math.min(...xs), maxX = Math.max(...xs);
   const minY = Math.min(...ys), maxY = Math.max(...ys);
 
-  const routeW = Math.max(maxX - minX, 40);
-  const routeH = Math.max(maxY - minY, 40);
+  const routeW = Math.max(maxX - minX, 35);
+  const routeH = Math.max(maxY - minY, 35);
 
-  const scaleX = (W * 0.72) / routeW;
-  const scaleY = (H * 0.72) / routeH;
-  mapScale = Math.min(Math.max(Math.min(scaleX, scaleY), 1.2), 4.8);
+  const scaleX = (W * 0.68) / routeW;
+  const scaleY = (H * 0.68) / routeH;
+  // 지나치게 확대되지 않도록 최대 4.2배로 제한
+  mapScale = Math.min(Math.max(Math.min(scaleX, scaleY), 1.2), 4.2);
 
   const centerX = (minX + maxX) / 2;
   const centerY = (minY + maxY) / 2;
@@ -612,7 +613,7 @@ function applyMapTransform() {
   }
 }
 
-// 괌 SVG 동선 지도 컴포넌트 (스마트 라벨 오프셋 & 지시선 적용)
+// 괌 SVG 동선 지도 컴포넌트 (마커 축소, 폰트 축소, 스마트 오프셋)
 function vMap() {
   const d = S.days[day];
   const P = d.s.filter(s => 
@@ -629,12 +630,13 @@ function vMap() {
   const c = P.map(p => pr(p.o, p.a));
   const polyPoints = GU_DETAILED.map(p => pr(p[0], p[1]).map(v => v.toFixed(1)).join(",")).join(" ");
 
-  // 겹침 방지를 위한 스마트 오프셋 패턴 (우측상단, 좌측상단, 우측하단, 좌측하단 분산)
+  // 슬림 마커에 맞춘 컴팩트 오프셋 (dx, dy 거리 축소)
   const offsets = [
-    { dx: 22, dy: -8, anchor: "start" },
-    { dx: -22, dy: -8, anchor: "end" },
-    { dx: 22, dy: 14, anchor: "start" },
-    { dx: -22, dy: 14, anchor: "end" }
+    { dx: 14, dy: -6, anchor: "start" },
+    { dx: -14, dy: -6, anchor: "end" },
+    { dx: 14, dy: 10, anchor: "start" },
+    { dx: -14, dy: 10, anchor: "end" },
+    { dx: 0, dy: -12, anchor: "middle" }
   ];
 
   const svg = `
@@ -654,9 +656,9 @@ function vMap() {
         <rect width="${W}" height="${H}" fill="var(--ln)"/>
         
         <g id="mapZoomGroup" transform="translate(${mapPan.x}, ${mapPan.y}) scale(${mapScale})" style="transform-origin: 0 0; transition: transform 0.15s cubic-bezier(0.2, 0, 0.2, 1);">
-          <polygon points="${polyPoints}" fill="var(--cd)" stroke="var(--mu)" stroke-width="1.2" stroke-linejoin="round"/>
+          <polygon points="${polyPoints}" fill="var(--cd)" stroke="var(--mu)" stroke-width="1.0" stroke-linejoin="round"/>
           
-          ${c.length > 1 ? `<polyline points="${c.map(a => a.join(",")).join(" ")}" fill="none" stroke="#ec4899" stroke-width="2.5" stroke-dasharray="6 4" stroke-linecap="round"/>` : ""}
+          ${c.length > 1 ? `<polyline points="${c.map(a => a.join(",")).join(" ")}" fill="none" stroke="#ec4899" stroke-width="2" stroke-dasharray="4 3" stroke-linecap="round"/>` : ""}
           
           ${c.map((a, i) => {
             const off = offsets[i % offsets.length];
@@ -664,30 +666,30 @@ function vMap() {
             const ty = a[1] + off.dy;
 
             return `
-              <!-- 마커와 라벨을 잇는 보조 지시선 -->
-              <line x1="${a[0]}" y1="${a[1]}" x2="${tx}" y2="${ty}" stroke="#ec4899" stroke-width="1" stroke-dasharray="2 2" opacity="0.75"/>
+              <!-- 라벨 지시선 -->
+              <line x1="${a[0]}" y1="${a[1]}" x2="${tx}" y2="${ty}" stroke="#ec4899" stroke-width="0.8" stroke-dasharray="2 1.5" opacity="0.65"/>
               
-              <!-- 핀 마커 -->
-              <circle cx="${a[0]}" cy="${a[1]}" r="11" fill="#ec4899" stroke="var(--cd)" stroke-width="2"/>
-              <text x="${a[0]}" y="${a[1] + 4}" text-anchor="middle" fill="#fff" font-size="11" font-weight="800">${i + 1}</text>
+              <!-- 슬림 핀 마커 (반경 7.5px) -->
+              <circle cx="${a[0]}" cy="${a[1]}" r="7.5" fill="#ec4899" stroke="var(--cd)" stroke-width="1.5"/>
+              <text x="${a[0]}" y="${a[1] + 3}" text-anchor="middle" fill="#fff" font-size="8.5" font-weight="800">${i + 1}</text>
               
-              <!-- 겹쳐도 또렷하게 읽히는 텍스트 라벨 (그림자 및 윤곽선) -->
-              <text x="${tx}" y="${ty + 4}" text-anchor="${off.anchor}" fill="var(--tx)" font-size="10.5" font-weight="700" paint-order="stroke" stroke="var(--cd)" stroke-width="3.5" stroke-linejoin="round">
+              <!-- 축소된 텍스트 라벨 (8.5px, 얇은 윤곽선) -->
+              <text x="${tx}" y="${ty + 3}" text-anchor="${off.anchor}" fill="var(--tx)" font-size="8.5" font-weight="700" paint-order="stroke" stroke="var(--cd)" stroke-width="2.5" stroke-linejoin="round">
                 ${E(P[i].n)}
               </text>
             `;
           }).join("")}
         </g>
         
-        <text x="14" y="24" fill="var(--mu)" font-size="11" font-weight="700" style="pointer-events:none;">GUAM ISLAND N ↑</text>
+        <text x="12" y="20" fill="var(--mu)" font-size="9.5" font-weight="700" style="pointer-events:none;">GUAM ISLAND N ↑</text>
       </svg>
     </div>
   `;
 
   return `
     <div style="display:flex;justify-content:space-between;align-items:center;margin:16px 0 6px;">
-      <h3 style="margin:0;font-size:16px;">🗺️ 이 날의 동선 지도 (${E(d.d)})</h3>
-      <span class="sm" style="color:var(--ac);font-weight:600;">※ 겹쳐 보일 땐 우측 하단 🎯 누르기</span>
+      <h3 style="margin:0;font-size:15px;">🗺️ 이 날의 동선 지도 (${E(d.d)})</h3>
+      <span class="sm" style="color:var(--mu);">핀치 줌 / 드래그 이동 가능</span>
     </div>
 
     ${svg}
@@ -895,7 +897,7 @@ function attachMapEvents() {
   container.addEventListener("wheel", e => {
     e.preventDefault();
     const factor = e.deltaY < 0 ? 1.15 : 0.87;
-    mapScale = Math.min(Math.max(0.8, mapScale * factor), 6.0);
+    mapScale = Math.min(Math.max(0.8, mapScale * factor), 6.5);
     applyMapTransform();
   }, { passive: false });
 
@@ -934,7 +936,7 @@ function attachMapEvents() {
       e.preventDefault();
       const currentDist = getTouchDistance(e.touches);
       const factor = currentDist / initialPinchDist;
-      mapScale = Math.min(Math.max(0.8, initialScale * factor), 6.0);
+      mapScale = Math.min(Math.max(0.8, initialScale * factor), 6.5);
 
       const currentCenter = getTouchCenter(e.touches);
       mapPan.x = startPan.x + (currentCenter.x - touchStartCenter.x);
@@ -960,7 +962,7 @@ function render() {
   if (tab === 0) {
     subTabs.style.display = "flex";
     subTabs.innerHTML = S.days.map((d, i) => `
-      <button class="chip ${i === day ? "on" : ""}" onclick="day = ${i}; resetMap(); render();">${E(d.d)}</button>
+      <button class="chip ${i === day ? "on" : ""}" onclick="day = ${i}; render();">${E(d.d)}</button>
     `).join("");
   } else {
     subTabs.style.display = "none";
@@ -970,12 +972,13 @@ function render() {
 
   if (tab === 0) {
     attachMapEvents();
-    applyMapTransform();
+    // 날짜 전환 및 초기 렌더링 시 자동으로 해당 일차 경로에 맞춤 확대
+    fitCurrentRoute();
   }
 }
 
 try {
-  const L = localStorage.getItem("guam_trip_final_v4");
+  const L = localStorage.getItem("guam_trip_final_v5");
   if (L) {
     const parsed = JSON.parse(L);
     if (parsed && Array.isArray(parsed.days)) {
