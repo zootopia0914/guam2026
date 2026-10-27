@@ -173,14 +173,6 @@
       border: 1.5px solid var(--ac);
       box-shadow: none;
     }
-    .btn.export {
-      background: #059669;
-      color: #fff;
-      width: 100%;
-      font-size: 15px;
-      padding: 13px;
-    }
-    .btn.export:hover { background: #047857; }
     .tot {
       font-size: 28px;
       font-weight: 800;
@@ -228,7 +220,7 @@
     .map-svg:active {
       cursor: grabbing;
     }
-    /* 지도 컨트롤 버튼: 우측 하단 오버레이 */
+    /* 지도 컨트롤 버튼: 지도 우측 하단 오버레이 */
     .map-controls {
       position: absolute;
       bottom: 12px;
@@ -312,13 +304,6 @@
 
   <nav id="nav"></nav>
   <div id="v"></div>
-
-  <div style="margin-top:28px;padding-top:16px;border-top:1px dashed var(--ln)">
-    <button class="btn export" onclick="exportHtml()">📥 수정한 HTML 내보내기 (다운로드)</button>
-    <div class="sm" style="text-align:center;margin-top:8px">
-      여기서 수정한 내용이 기본값으로 포함된 <b>index.html</b>이 다운로드됩니다. GitHub에 바로 올리시면 됩니다!
-    </div>
-  </div>
 </div>
 
 <div id="toast" class="toast"></div>
@@ -358,7 +343,7 @@ const defaultS = {
         { t: "11:00", n: "팻보이슬림", m: "바비큐 포장 (Take-out)", a: 13.5121, o: 144.8035 },
         { t: "12:20", n: "세티베이 전망대", m: "오션뷰 피크닉 점심 🥪", a: 13.3313, o: 144.6608 },
         { t: "13:40", n: "메리조 포구", m: "부두 데크 인생샷 포토존", a: 13.2674, o: 144.6650 },
-        { t: "14:30", n: "이나라한 천연 자연수영장", m: "자연 풀 산책 & 휴식", a: 13.2755, 144.7497 },
+        { t: "14:30", n: "이나라한 천연 자연수영장", m: "자연 풀 산책 & 휴식", a: 13.2755, o: 144.7497 },
         { t: "16:00", n: "마이티퍼플", m: "하갓냐 아사이볼 디저트", a: 13.4750, o: 144.7504 },
         { t: "17:30", n: "오카 포인트", m: "호텔 옆 해안 절벽 일몰", a: 13.4997, o: 144.7696 },
         { t: "18:00", n: "RIHGA ROYAL LAGUNA GUAM RESORT", m: "체크인 & 저녁 휴식", a: 13.4912, o: 144.7674 }
@@ -433,7 +418,7 @@ function toast(msg) {
 
 function save() {
   try {
-    localStorage.setItem("guam_trip_v3", JSON.stringify(S));
+    localStorage.setItem("guam_trip_final", JSON.stringify(S));
     const stt = $("#stt");
     if (stt) stt.textContent = "저장됨 ✓";
   } catch (e) {}
@@ -549,7 +534,6 @@ function getGoogleMapsUrl(dayIndex) {
   return url;
 }
 
-// 지도 제어 함수
 function zoomMap(factor) {
   mapScale = Math.min(Math.max(0.8, mapScale * factor), 6.0);
   applyMapTransform();
@@ -943,24 +927,9 @@ function render() {
   }
 }
 
-// 수정한 현재 데이터를 기본값(S)으로 치환하여 새 index.html 다운로드
-function exportHtml() {
-  let doc = document.documentElement.outerHTML;
-  const regex = /const defaultS\s*=\s*\{[\s\S]*?\n\};/;
-  const updatedS = "const defaultS = " + JSON.stringify(S, null, 2) + ";";
-  doc = doc.replace(regex, updatedS);
-
-  const blob = new Blob([doc], { type: "text/html;charset=utf-8" });
-  const a = document.createElement("a");
-  a.href = URL.createObjectURL(blob);
-  a.download = "index.html";
-  a.click();
-  toast("index.html 다운로드 완료!");
-}
-
-// 데이터 로드: 새로운 구조(guam_trip_v3)로 갱신하여 최신 일정 바로 적용
+// 브라우저 캐시 안전 초기화 및 렌더링
 try {
-  const L = localStorage.getItem("guam_trip_v3");
+  const L = localStorage.getItem("guam_trip_final");
   if (L) {
     const parsed = JSON.parse(L);
     if (parsed && Array.isArray(parsed.days)) {
