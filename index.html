@@ -234,8 +234,8 @@
     }
     .map-controls {
       position: absolute;
-      top: 10px;
-      right: 10px;
+      bottom: 12px;
+      right: 12px;
       display: flex;
       gap: 5px;
       align-items: center;
@@ -923,9 +923,6 @@ function render() {
     <button class="${i === tab ? "on" : ""}" onclick="tab = ${i}; render();">${t}</button>
   `).join("");
   $("#v").innerHTML = [vSch, vBud, vChk, vRes][tab]();
-  if (tab === 0) {
-    initMapEvents();
-  }
 }
 
 // 수정한 현재 데이터를 기본값(S)으로 치환하여 새 index.html 파일 다운로드
