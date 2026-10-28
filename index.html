@@ -115,7 +115,7 @@
     input:focus, select:focus { outline: 2px solid var(--ac); background: var(--cd); }
     .row { display: grid; gap: 5px; align-items: center; }
     .st { grid-template-columns: 70px 1fr 26px; }
-    .coord-row { grid-template-columns: 1fr 84px 90px auto; margin-top: 4px; }
+    .coord-row { grid-template-columns: 1fr 88px 88px auto; margin-top: 4px; }
     .coord-input { font-variant-numeric: tabular-nums; font-size: 12px; padding: 6px 5px; }
     .sm { font-size: 11.5px; color: var(--mu); }
     .x { border: 0; background: none; color: var(--mu); cursor: pointer; font-size: 18px; line-height: 1; padding: 3px; }
@@ -251,7 +251,7 @@
 
 <script>
 // ==========================================
-// Firebase 설정 (guam-27342)
+// 1. Firebase 실시간 데이터베이스 설정 (guam-27342)
 // ==========================================
 const firebaseConfig = {
   apiKey: "AIzaSyD4sAQxCv4YkaMR0BYear65sDwkYdXB_ZI",
@@ -286,92 +286,24 @@ try {
 
 const TABS = ["일정", "예산", "준비물", "예약"];
 
+// 기본 뼈대 데이터 (세부 데이터는 클라우드에서 자동 로드됨)
 const defaultS = {
   days: [
-    {
-      d: "12/5 (토)",
-      s: [
-        { t: "01:40", n: "괌 공항", m: "입국 심사 및 이동", a: 13.4839, o: 144.7972 },
-        { t: "03:00", n: "괌 플라자 리조트", m: "체크인 후 휴식", a: 13.5186, o: 144.8077 },
-        { t: "12:00", n: "도스버거", m: "투몬 본점 점심", a: 13.5181, o: 144.8080 },
-        { t: "14:00", n: "투몬비치", m: "해변 산책 & 물놀이", a: 13.5152, o: 144.8058 },
-        { t: "16:30", n: "러브 크레페 & ABC마트", m: "디저트 & 쇼핑", a: 13.5186, o: 144.8077 },
-        { t: "18:30", n: "비치인쉬림프", m: "투몬 본점 저녁 식사", a: 13.5168, o: 144.8066 }
-      ]
-    },
-    {
-      d: "12/6 (일)",
-      s: [
-        { t: "10:00", n: "투몬비치", m: "해변 여유 및 브런치", a: 13.5152, o: 144.8058 },
-        { t: "13:00", n: "투몬 시내 쇼핑", m: "ABC마트 등 둘러보기", a: 13.5186, o: 144.8077 },
-        { t: "17:00", n: "투몬야시장", m: "시내 야시장 구경", a: 13.5158, o: 144.8061 },
-        { t: "18:30", n: "크랩대디", m: "해산물 보일링 크랩 저녁", a: 13.5097, o: 144.8018 },
-        { t: "21:00", n: "라이브 하우스", m: "음악 펍 & 맥주", a: 13.5158, o: 144.8061 }
-      ]
-    },
-    {
-      d: "12/7 (월)",
-      s: [
-        { t: "09:30", n: "피카스 카페", m: "아침 브런치 (로코모코)", a: 13.5126, o: 144.8118 },
-        { t: "10:40", n: "괌 플라자 리조트", m: "체크아웃 후 렌터카 탑승", a: 13.5186, o: 144.8077 },
-        { t: "11:00", n: "팻보이슬림", m: "바비큐 포장 (Take-out)", a: 13.5121, o: 144.8035 },
-        { t: "12:20", n: "세티베이 전망대", m: "오션뷰 피크닉 점심 🥪", a: 13.3313, o: 144.6608 },
-        { t: "13:40", n: "메리조 포구", m: "부두 데크 인생샷 포토존", a: 13.2674, o: 144.6650 },
-        { t: "14:30", n: "이나라한 천연 자연수영장", m: "자연 풀 산책 & 휴식", a: 13.2755, o: 144.7497 },
-        { t: "16:00", n: "마이티퍼플", m: "하갓냐 아사이볼 디저트", a: 13.4750, o: 144.7504 },
-        { t: "17:30", n: "오카 포인트", m: "호텔 옆 해안 절벽 일몰", a: 13.4997, o: 144.7696 },
-        { t: "18:00", n: "RIHGA ROYAL LAGUNA GUAM RESORT", m: "체크인 & 저녁 휴식", a: 13.4912, o: 144.7674 }
-      ]
-    },
-    {
-      d: "12/8 (화)",
-      s: [
-        { t: "10:00", n: "RIHGA ROYAL LAGUNA GUAM RESORT", m: "인피니티 풀 수영 휴식", a: 13.4912, o: 144.7674 },
-        { t: "12:00", n: "칠리스 (GPO)", m: "아울렛 내 미국식 점심", a: 13.4989, o: 144.7749 },
-        { t: "13:30", n: "괌 프리미어 아울렛", m: "GPO 본격 쇼핑 (타미, 로스)", a: 13.4989, o: 144.7749 },
-        { t: "17:30", n: "롱혼 스테이크", m: "프라임 립 & 스테이크 저녁", a: 13.4992, o: 144.7762 },
-        { t: "20:00", n: "케이마트", m: "대형 마트 기념품 털기", a: 13.5042, o: 144.8055 }
-      ]
-    },
-    {
-      d: "12/9 (수)",
-      s: [
-        { t: "11:00", n: "RIHGA ROYAL LAGUNA GUAM RESORT", m: "체크아웃 & 짐 보관", a: 13.4912, o: 144.7674 },
-        { t: "13:00", n: "투몬 시내 쇼핑", m: "선물 & 기념품 마무리", a: 13.5186, o: 144.8077 },
-        { t: "18:00", n: "차모로 야시장", m: "수요 야시장 로컬 바비큐", a: 13.4774, o: 144.7522 },
-        { t: "23:30", n: "괌 공항", m: "렌터카 반납 및 출국 수속", a: 13.4839, o: 144.7972 }
-      ]
-    },
-    {
-      d: "12/10 (목)",
-      s: [
-        { t: "02:50", n: "괌 공항 출발", m: "귀국편 항공 탑승", a: 13.4839, o: 144.7972 }
-      ]
-    }
+    { d: "12/5 (토)", s: [] },
+    { d: "12/6 (일)", s: [] },
+    { d: "12/7 (월)", s: [] },
+    { d: "12/8 (화)", s: [] },
+    { d: "12/9 (수)", s: [] },
+    { d: "12/10 (목)", s: [] }
   ],
-  bud: [
-    { n: "항공권", a: 950000, c: "KRW", k: "교통" },
-    { n: "숙소", a: 1200000, c: "KRW", k: "숙박" },
-    { n: "렌터카", a: 320, c: "USD", k: "교통" },
-    { n: "식비", a: 450, c: "USD", k: "식비" },
-    { n: "입장료·투어", a: 160, c: "USD", k: "액티비티" },
-    { n: "쇼핑", a: 200, c: "USD", k: "쇼핑" }
-  ],
+  bud: [],
   rate: 1400,
   pax: 2,
   chk: [
-    { g: "필수", i: [["여권 (유효기간 6개월 이상)", 0], ["항공권 E-Ticket 및 호텔 바우처", 0], ["전자세관신고서(Guam EDF) 작성", 0], ["해외결제 신용카드 및 현금 USD", 0], ["여행자 보험 가입증명서", 0]] },
-    { g: "전자기기", i: [["110V 돼지코 어댑터", 0], ["휴대폰 충전기 및 보조배터리", 0], ["eSIM / 로밍 설정", 0], ["방수팩", 0]] },
-    { g: "해변·액티비티", i: [["수영복 / 래시가드", 0], ["선크림 (SPF 50+) 및 선글라스", 0], ["아쿠아슈즈 및 스노클 장비", 0], ["비치타월", 0]] },
-    { g: "기타", i: [["상비약", 0], ["국제운전면허증 및 국내면허증", 0], ["가벼운 바람막이 겉옷", 0]] }
+    { g: "필수", i: [["여권 (유효기간 6개월 이상)", 0], ["전자세관신고서(Guam EDF)", 0]] },
+    { g: "기타", i: [["110V 돼지코", 0], ["상비약", 0]] }
   ],
-  res: [
-    { k: "항공", n: "인천 → 괌", w: "12/5 (토) 01:40 도착", no: "7C3102", m: "입국 수속" },
-    { k: "항공", n: "괌 → 인천", w: "12/10 (목) 02:50", no: "KE422", m: "공항 2시간 반 전 도착" },
-    { k: "숙소", n: "괌 플라자", w: "12/5 ~ 12/7 (2박)", no: "RES-101", m: "체크인 15:00 / 아웃 11:00" },
-    { k: "숙소", n: "리가로얄 라구나", w: "12/7 ~ 12/9 (2박)", no: "RES-102", m: "체크인 15:00 / 아웃 11:00" },
-    { k: "렌터카", n: "남부 & 쇼핑 렌트", w: "12/7 10:00 ~ 12/9 23:30", no: "CAR-412", m: "공항 반납" }
-  ]
+  res: []
 };
 
 let S = JSON.parse(JSON.stringify(defaultS));
@@ -384,7 +316,7 @@ let currentVB = { ...BASE_VB };
 const $ = s => document.querySelector(s);
 const E = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
-// [기능 1] 시간순 자동 정렬 함수
+// [정렬 기능] 시간순 자동 오름차순 정렬
 function sortByTime(dayIdx) {
   if (!S.days[dayIdx] || !S.days[dayIdx].s) return;
   S.days[dayIdx].s.sort((a, b) => {
@@ -394,6 +326,54 @@ function sortByTime(dayIdx) {
     if (!b.t) return -1;
     return timeA.localeCompare(timeB);
   });
+}
+
+// 괌 주요 장소 정밀 좌표 매핑 사전
+const GUAM_GEO = {
+  "공항": [13.4839, 144.7972], "괌공항": [13.4839, 144.7972],
+  "투몬": [13.5152, 144.8058], "투몬비치": [13.5152, 144.8058],
+  "괌플라자": [13.5186, 144.8077], "플라자리조트": [13.5186, 144.8077],
+  "리가로얄": [13.4912, 144.7674], "rihga": [13.4912, 144.7674], "라구나": [13.4912, 144.7674],
+  "도스버거": [13.5181, 144.8080], "도스": [13.5181, 144.8080],
+  "러브크레페": [13.5186, 144.8077], "크레페": [13.5186, 144.8077],
+  "abc마트": [13.5186, 144.8077], "abc": [13.5186, 144.8077],
+  "비치인쉬림프": [13.5168, 144.8066], "쉬림프": [13.5168, 144.8066],
+  "투몬야시장": [13.5158, 144.8061], "크랩대디": [13.5097, 144.8018],
+  "라이브하우스": [13.5158, 144.8061], "피카스카페": [13.5126, 144.8118], "피카스": [13.5126, 144.8118],
+  "팻보이슬림": [13.5121, 144.8035], "팻보이": [13.5121, 144.8035],
+  "세티베이": [13.3313, 144.6608], "메리조": [13.2674, 144.6650], "메리조포구": [13.2674, 144.6650],
+  "이나라한": [13.2755, 144.7497], "이나라잔": [13.2755, 144.7497],
+  "마이티퍼플": [13.4750, 144.7504],
+  "오카포인트": [13.4997, 144.7696], "오카": [13.4997, 144.7696],
+  "아울렛": [13.4989, 144.7749], "gpo": [13.4989, 144.7749], "프리미어": [13.4989, 144.7749],
+  "칠리스": [13.4989, 144.7749], "롱혼": [13.4992, 144.7762], "롱혼스테이크": [13.4992, 144.7762],
+  "케이마트": [13.5042, 144.8055], "k마트": [13.5042, 144.8055], "kmart": [13.5042, 144.8055],
+  "차모로": [13.4774, 144.7522], "차모로야시장": [13.4774, 144.7522],
+  "사랑의절벽": [13.5351, 144.8025], "두연인": [13.5351, 144.8025],
+  "리티디안": [13.6552, 144.8610], "마이크로네시아몰": [13.5238, 144.8175]
+};
+
+// [위치검색 기능] 장소 입력 시 위도·경도 input 요소를 찾아 즉각 화면에 입력 및 저장
+function autoFindCoords(dIdx, sIdx, name, rowEl) {
+  if (!name) return;
+  const clean = name.trim().toLowerCase().replace(/[^a-z0-9가-힣]/g, "");
+  for (const [k, c] of Object.entries(GUAM_GEO)) {
+    if (clean.includes(k)) {
+      if (S.days[dIdx] && S.days[dIdx].s[sIdx]) {
+        S.days[dIdx].s[sIdx].a = c[0];
+        S.days[dIdx].s[sIdx].o = c[1];
+        
+        if (rowEl) {
+          const latInput = rowEl.querySelector(".coord-lat");
+          const lngInput = rowEl.querySelector(".coord-lng");
+          if (latInput) latInput.value = Number(c[0]).toFixed(4);
+          if (lngInput) lngInput.value = Number(c[1]).toFixed(4);
+        }
+        save();
+        return;
+      }
+    }
+  }
 }
 
 // 클라우드 저장
@@ -425,12 +405,13 @@ function up(f) {
   render();
 }
 
+// Firebase 리스너 연결
 function initRealtimeSync() {
   if (!docRef) return;
   docRef.onSnapshot(doc => {
     if (doc.exists) {
       const data = doc.data();
-      if (data && Array.isArray(data.days)) {
+      if (data && Array.isArray(data.days) && data.days.length > 0) {
         S = data;
         localStorage.setItem("guam_trip_cloud_v1", JSON.stringify(S));
         updateStatus("실시간 동기화됨 ✓", "ok");
@@ -463,45 +444,6 @@ function getCategoryBadge(name) {
     return `<span class="cat-badge cat-hotel">🏨 숙소/공항</span>`;
   }
   return `<span class="cat-badge cat-spot">📍 스폿</span>`;
-}
-
-// 괌 주요 장소 정밀 좌표 매핑 사전
-const GUAM_GEO = {
-  "공항": [13.4839, 144.7972], "괌공항": [13.4839, 144.7972],
-  "투몬": [13.5152, 144.8058], "투몬비치": [13.5152, 144.8058],
-  "괌플라자": [13.5186, 144.8077], "플라자리조트": [13.5186, 144.8077],
-  "리가로얄": [13.4912, 144.7674], "rihga": [13.4912, 144.7674], "라구나": [13.4912, 144.7674],
-  "도스버거": [13.5181, 144.8080], "도스": [13.5181, 144.8080],
-  "러브크레페": [13.5186, 144.8077], "크레페": [13.5186, 144.8077],
-  "abc마트": [13.5186, 144.8077], "abc": [13.5186, 144.8077],
-  "비치인쉬림프": [13.5168, 144.8066], "쉬림프": [13.5168, 144.8066],
-  "투몬야시장": [13.5158, 144.8061], "크랩대디": [13.5097, 144.8018],
-  "라이브하우스": [13.5158, 144.8061], "피카스카페": [13.5126, 144.8118], "피카스": [13.5126, 144.8118],
-  "팻보이슬림": [13.5121, 144.8035], "팻보이": [13.5121, 144.8035],
-  "세티베이": [13.3313, 144.6608], "메리조": [13.2674, 144.6650],
-  "이나라한": [13.2755, 144.7497], "마이티퍼플": [13.4750, 144.7504],
-  "오카포인트": [13.4997, 144.7696], "아울렛": [13.4989, 144.7749], "gpo": [13.4989, 144.7749],
-  "프리미어": [13.4989, 144.7749],
-  "칠리스": [13.4989, 144.7749], "롱혼": [13.4992, 144.7762],
-  "케이마트": [13.5042, 144.8055], "k마트": [13.5042, 144.8055],
-  "차모로": [13.4774, 144.7522], "차모로야시장": [13.4774, 144.7522]
-};
-
-// [기능 2] 장소 입력 시 좌표 자동 검색 함수
-function autoFindCoords(dIdx, sIdx, name) {
-  if (!name || !name.trim()) return;
-  const clean = name.trim().toLowerCase().replace(/[^a-z0-9가-힣]/g, "");
-  for (const [k, c] of Object.entries(GUAM_GEO)) {
-    if (clean.includes(k)) {
-      if (S.days[dIdx] && S.days[dIdx].s[sIdx]) {
-        S.days[dIdx].s[sIdx].a = c[0];
-        S.days[dIdx].s[sIdx].o = c[1];
-        save();
-        render();
-        return;
-      }
-    }
-  }
 }
 
 const GU_DETAILED = [
@@ -607,6 +549,7 @@ function zoomMap(factor) {
 
 function vMap() {
   const d = S.days[day];
+  if (!d || !d.s) return "";
   const P = d.s.filter(s => s.a !== "" && s.o !== "" && s.a != null && s.a >= 13.1 && s.a <= 13.8 && s.o >= 144.5 && s.o <= 145.1);
   const gmapsLink = getGoogleMapsUrl(day);
   const W = 400, H = 490;
@@ -676,7 +619,7 @@ function vMap() {
 
 // 1. 일정 탭
 function vSch() {
-  const curDay = S.days[day];
+  const curDay = S.days[day] || { s: [] };
 
   return `
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
@@ -689,6 +632,7 @@ function vSch() {
     <div class="card" style="padding: 10px 12px;">
       ${!isEditMode ? `
         <div class="timeline">
+          ${curDay.s.length === 0 ? '<div class="sm" style="text-align:center;padding:12px;color:var(--mu);">등록된 일정이 없습니다. 편집 버튼을 눌러 추가해보세요.</div>' : ''}
           ${curDay.s.map((s, idx) => `
             <div class="tl-item">
               <div class="tl-badge">${idx + 1}</div>
@@ -709,23 +653,23 @@ function vSch() {
           `).join('')}
         </div>
       ` : `
-        <div style="margin-bottom:6px;" class="sm">💡 시간을 수정하면 자동으로 시간순 정렬되고, 장소를 입력하면 좌표를 자동 검색합니다.</div>
+        <div style="margin-bottom:6px;" class="sm">💡 장소를 입력하면 좌표가 자동 입력되며, 시간 입력 후 변경하면 시간순 정렬됩니다.</div>
         ${curDay.s.map((s, j) => `
-          <div style="border-bottom:1px solid var(--ln);padding:8px 0;">
+          <div class="edit-row" style="border-bottom:1px solid var(--ln);padding:8px 0;">
             <div class="row st">
               <input value="${E(s.t)}" placeholder="10:00" 
                 onchange="up(() => { S.days[${day}].s[${j}].t = this.value; sortByTime(${day}); })">
-              <input value="${E(s.n)}" placeholder="장소명" style="font-weight:600" 
-                oninput="const val = this.value; S.days[${day}].s[${j}].n = val; autoFindCoords(${day}, ${j}, val);"
-                onchange="up(() => S.days[${day}].s[${j}].n = this.value)">
+              <input value="${E(s.n)}" placeholder="장소명 입력시 좌표 자동검색" style="font-weight:600" 
+                oninput="const val = this.value; S.days[${day}].s[${j}].n = val; autoFindCoords(${day}, ${j}, val, this.closest('.edit-row'));"
+                onchange="up(() => { S.days[${day}].s[${j}].n = this.value; autoFindCoords(${day}, ${j}, this.value, this.closest('.edit-row')); })">
               <button class="x" title="삭제" onclick="up(() => S.days[${day}].s.splice(${j}, 1))">×</button>
             </div>
 
             <div class="row coord-row">
               <input value="${E(s.m)}" placeholder="메모" onchange="up(() => S.days[${day}].s[${j}].m = this.value)">
-              <input class="coord-input" type="number" step="0.0001" value="${s.a !== '' && s.a != null ? Number(s.a).toFixed(4) : ''}" placeholder="위도" onchange="up(() => S.days[${day}].s[${j}].a = this.value === '' ? '' : +this.value)">
-              <input class="coord-input" type="number" step="0.0001" value="${s.o !== '' && s.o != null ? Number(s.o).toFixed(4) : ''}" placeholder="경도" onchange="up(() => S.days[${day}].s[${j}].o = this.value === '' ? '' : +this.value)">
-              <button class="geo-btn" title="장소명으로 좌표 다시 찾기" onclick="autoFindCoords(${day}, ${j}, S.days[${day}].s[${j}].n)">📍 자동</button>
+              <input class="coord-input coord-lat" type="number" step="0.0001" value="${s.a !== '' && s.a != null ? Number(s.a).toFixed(4) : ''}" placeholder="위도" onchange="up(() => S.days[${day}].s[${j}].a = this.value === '' ? '' : +this.value)">
+              <input class="coord-input coord-lng" type="number" step="0.0001" value="${s.o !== '' && s.o != null ? Number(s.o).toFixed(4) : ''}" placeholder="경도" onchange="up(() => S.days[${day}].s[${j}].o = this.value === '' ? '' : +this.value)">
+              <button class="geo-btn" title="장소명으로 좌표 다시 찾기" onclick="autoFindCoords(${day}, ${j}, S.days[${day}].s[${j}].n, this.closest('.edit-row'))">📍 자동</button>
             </div>
           </div>
         `).join("")}
@@ -743,9 +687,9 @@ function vSch() {
 // 2. 예산 탭
 function usd(b) { return b.c === "USD" ? +b.a : +b.a / S.rate; }
 function vBud() {
-  const T = S.bud.reduce((s, b) => s + usd(b), 0);
+  const T = (S.bud || []).reduce((s, b) => s + usd(b), 0);
   const cats = {};
-  S.bud.forEach(b => cats[b.k] = (cats[b.k] || 0) + usd(b));
+  (S.bud || []).forEach(b => cats[b.k] = (cats[b.k] || 0) + usd(b));
   const f = n => Math.round(n || 0).toLocaleString();
 
   return `
@@ -763,7 +707,7 @@ function vBud() {
 
     <div class="card ov">
       <table>
-        ${S.bud.map((b, i) => `
+        ${(S.bud || []).map((b, i) => `
           <tr>
             <td><input style="width:100%" value="${E(b.n)}" onchange="up(() => S.bud[${i}].n = this.value)"></td>
             <td><input type="number" style="width:80px" value="${b.a || ""}" placeholder="0" onchange="up(() => S.bud[${i}].a = +this.value)"></td>
@@ -796,7 +740,7 @@ function vBud() {
 // 3. 준비물 탭
 function vChk() {
   let a = 0, n = 0;
-  S.chk.forEach(g => g.i.forEach(i => { n++; a += i[1]; }));
+  (S.chk || []).forEach(g => (g.i || []).forEach(i => { n++; a += i[1]; }));
 
   return `
     <div class="card">
@@ -804,10 +748,10 @@ function vChk() {
       <div class="bar" style="margin-top:5px;"><i style="width:${n ? (a / n) * 100 : 0}%"></i></div>
     </div>
 
-    ${S.chk.map((g, gi) => `
+    ${(S.chk || []).map((g, gi) => `
       <div class="card">
         <b>${E(g.g)}</b>
-        ${g.i.map((it, ii) => `
+        ${(g.i || []).map((it, ii) => `
           <div style="display:flex;gap:7px;align-items:center;padding:4px 0;">
             <input type="checkbox" ${it[1] ? "checked" : ""} onchange="up(() => S.chk[${gi}].i[${ii}][1] = this.checked ? 1 : 0)">
             <span style="flex:1;${it[1] ? "text-decoration:line-through;color:var(--mu)" : ""}">${E(it[0])}</span>
@@ -826,7 +770,7 @@ function vRes() {
   return `
     <div class="card ov">
       <table>
-        ${S.res.map((r, i) => `
+        ${(S.res || []).map((r, i) => `
           <tr>
             <td colspan="2" style="border-bottom:1px solid var(--ln);padding:7px 0;">
               <div class="row" style="grid-template-columns:70px 1fr 1fr 26px">
@@ -910,7 +854,7 @@ function render() {
   }
 }
 
-// 로컬 스토리지 확인 후 실행
+// 1. 기존 로컬 캐시 확인
 try {
   const L = localStorage.getItem("guam_trip_cloud_v1");
   if (L) {
@@ -919,6 +863,7 @@ try {
   }
 } catch (e) {}
 
+// 2. 초기 렌더 및 클라우드 실시간 동기화 시작
 fitCurrentRoute();
 render();
 initRealtimeSync();
