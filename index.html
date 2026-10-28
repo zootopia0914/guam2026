@@ -251,7 +251,7 @@
 
 <script>
 // ==========================================
-// 1. Firebase 실시간 데이터베이스 설정 (guam-27342)
+// 1. Firebase 실시간 DB 설정 (guam-27342)
 // ==========================================
 const firebaseConfig = {
   apiKey: "AIzaSyD4sAQxCv4YkaMR0BYear65sDwkYdXB_ZI",
@@ -296,7 +296,8 @@ const defaultS = {
     { d: "12/9 (수)", s: [] },
     { d: "12/10 (목)", s: [] }
   ],
-  bud: [],
+  bud: [],          // 공용 경비 (1/N)
+  personal: [],     // 개인별 지출 (혜민/은주)
   rate: 1400,
   pax: 2,
   chk: [
@@ -353,7 +354,7 @@ const GUAM_GEO = {
   "리티디안": [13.6552, 144.8610], "마이크로네시아몰": [13.5238, 144.8175]
 };
 
-// [위치검색 기능] 1차 내부 사전 매핑 → 2차 온라인 지오코딩 검색 → 없으면 alert 경고창
+// [위치검색 기능] 1차 내부 사전 매핑 → 2차 온라인 지오코딩 검색 → 없으면 alert 알림
 async function autoFindCoords(dIdx, sIdx, name, rowEl, showAlert = true) {
   if (!name || !name.trim()) return;
   const raw = name.trim();
@@ -376,7 +377,6 @@ async function autoFindCoords(dIdx, sIdx, name, rowEl, showAlert = true) {
     if (data && data.length > 0) {
       const lat = parseFloat(data[0].lat);
       const lon = parseFloat(data[0].lon);
-      // 괌 부근 좌표 유효성 체크
       if (lat >= 13.1 && lat <= 13.8 && lon >= 144.5 && lon <= 145.1) {
         applyCoords(dIdx, sIdx, lat, lon, rowEl);
         updateStatus("실시간 동기화됨 ✓", "ok");
@@ -446,6 +446,7 @@ function initRealtimeSync() {
       const data = doc.data();
       if (data && Array.isArray(data.days) && data.days.length > 0) {
         S = data;
+        if (!S.personal) S.personal = [];
         localStorage.setItem("guam_trip_cloud_v1", JSON.stringify(S));
         updateStatus("실시간 동기화됨 ✓", "ok");
         render();
@@ -715,55 +716,194 @@ function vSch() {
   `;
 }
 
-// 2. 예산 탭
-function usd(b) { return b.c === "USD" ? +b.a : +b.a / S.rate; }
+// ==========================================
+// 2. 예산 탭 (공용 경비 / 개인 지출 완전 분리)
+// ==========================================
+function usd(b) {
+  return b.c === "USD" ? +b.a : +b.a / (S.rate || 1400);
+}
+
 function vBud() {
-  const T = (S.bud || []).reduce((s, b) => s + usd(b), 0);
-  const cats = {};
-  (S.bud || []).forEach(b => cats[b.k] = (cats[b.k] || 0) + usd(b));
+  if (!S.personal) S.personal = [];
+  
+  const sharedList = S.bud || [];
+  const personalList = S.personal || [];
+  const rate = S.rate || 1400;
   const f = n => Math.round(n || 0).toLocaleString();
 
+  // 1. 공용 경비 계산 (1/N)
+  const sharedTotal = sharedList.reduce((s, b) => s + usd(b), 0);
+  const sharedSettled = sharedList.filter(b => b.st === "Y").reduce((s, b) => s + usd(b), 0);
+  const sharedPerPerson = sharedTotal / 2;
+
+  // 2. 개인별 개별 지출 계산
+  const hyeminTotal = personalList.filter(p => (p.who || "혜민") === "혜민").reduce((s, b) => s + usd(b), 0);
+  const eunjuTotal = personalList.filter(p => p.who === "은주").reduce((s, b) => s + usd(b), 0);
+  const personalTotal = hyeminTotal + eunjuTotal;
+
+  // 3. 전체 합계 및 정산/미정산 비율
+  const grandTotal = sharedTotal + personalTotal;
+  const grandSettled = sharedSettled + personalList.filter(b => b.st === "Y").reduce((s, b) => s + usd(b), 0);
+  const grandUnsettled = grandTotal - grandSettled;
+  const grandPct = grandTotal > 0 ? (grandSettled / grandTotal) * 100 : 0;
+
+  // 공용 카테고리별 비중
+  const cats = {};
+  sharedList.forEach(b => cats[b.k] = (cats[b.k] || 0) + usd(b));
+
   return `
+    <!-- [1] 상단 요약 & 정산 진행률 바 -->
     <div class="card">
-      <div class="sm">총 예산</div>
-      <div class="tot">$${f(T)} <span class="sm">≈ ${f(T * S.rate)}원</span></div>
-      <div style="margin-top:4px">1인당 <b>$${f(T / (S.pax || 1))}</b> (${f((T * S.rate) / (S.pax || 1))}원)</div>
-      <div class="row" style="grid-template-columns:auto 85px auto 55px;margin-top:8px">
-        <span class="sm">환율 1$ =</span>
-        <input type="number" value="${S.rate}" onchange="up(() => S.rate = +this.value || 1400)">
-        <span class="sm">원 · 인원</span>
-        <input type="number" min="1" value="${S.pax}" onchange="up(() => S.pax = +this.value || 1)">
+      <div style="display:flex;justify-content:space-between;align-items:flex-end;">
+        <div>
+          <div class="sm">총 여행 지출 (공용 + 개인)</div>
+          <div class="tot">$${f(grandTotal)} <span class="sm">≈ ${f(grandTotal * rate)}원</span></div>
+        </div>
+        <div style="text-align:right;">
+          <span class="sm" style="color:#10b981;font-weight:700;">정산완료 $${f(grandSettled)}</span> · 
+          <span class="sm" style="color:#f59e0b;font-weight:700;">미정산 $${f(grandUnsettled)}</span>
+        </div>
+      </div>
+
+      <!-- 정산 듀얼 진행률 게이지 바 -->
+      <div style="margin-top:10px;">
+        <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px;">
+          <span>정산 완료율 (${grandPct.toFixed(1)}%)</span>
+          <span>남은 정산액: $${f(grandUnsettled)} (${f(grandUnsettled * rate)}원)</span>
+        </div>
+        <div class="bar" style="height:9px;background:#fef3c7;">
+          <div style="width:${grandPct}%;background:#10b981;height:100%;transition:width 0.3s;"></div>
+        </div>
+      </div>
+
+      <!-- 최종 1인 정산액 안내 카드 -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;">
+        <div style="background:var(--bg);padding:10px;border-radius:12px;border:1px solid var(--ln);">
+          <div style="font-size:12px;color:var(--mu);font-weight:700;">👤 혜민 최종 부담액</div>
+          <div style="font-size:18px;font-weight:800;color:var(--ac);margin:3px 0;">
+            $${f(sharedPerPerson + hyeminTotal)}
+          </div>
+          <div class="sm">공용 $${f(sharedPerPerson)} + 개인 $${f(hyeminTotal)}</div>
+          <div class="sm" style="color:var(--mu);">≈ ${f((sharedPerPerson + hyeminTotal) * rate)}원</div>
+        </div>
+
+        <div style="background:var(--bg);padding:10px;border-radius:12px;border:1px solid var(--ln);">
+          <div style="font-size:12px;color:var(--mu);font-weight:700;">👤 은주 최종 부담액</div>
+          <div style="font-size:18px;font-weight:800;color:var(--ac);margin:3px 0;">
+            $${f(sharedPerPerson + eunjuTotal)}
+          </div>
+          <div class="sm">공용 $${f(sharedPerPerson)} + 개인 $${f(eunjuTotal)}</div>
+          <div class="sm" style="color:var(--mu);">≈ ${f((sharedPerPerson + eunjuTotal) * rate)}원</div>
+        </div>
+      </div>
+
+      <div class="row" style="grid-template-columns:auto 85px;margin-top:10px;">
+        <span class="sm">기준 환율 (1$ =)</span>
+        <input type="number" value="${rate}" onchange="up(() => S.rate = +this.value || 1400)">
       </div>
     </div>
 
+    <!-- [2] 🌴 공용 경비 섹션 (1/N 나눔) -->
     <div class="card ov">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <div>
+          <b style="font-size:14px;">🌴 공용 경비 (1/N 나눔)</b>
+          <span class="sm" style="margin-left:6px;color:var(--ac);font-weight:700;">합계 $${f(sharedTotal)} (1인당 $${f(sharedPerPerson)})</span>
+        </div>
+      </div>
+
       <table>
-        ${(S.bud || []).map((b, i) => `
-          <tr>
-            <td><input style="width:100%" value="${E(b.n)}" onchange="up(() => S.bud[${i}].n = this.value)"></td>
-            <td><input type="number" style="width:80px" value="${b.a || ""}" placeholder="0" onchange="up(() => S.bud[${i}].a = +this.value)"></td>
-            <td>
-              <select onchange="up(() => S.bud[${i}].c = this.value)">
-                <option ${b.c === "USD" ? "selected" : ""}>USD</option>
-                <option ${b.c === "KRW" ? "selected" : ""}>KRW</option>
-              </select>
-            </td>
-            <td><input style="width:70px" value="${E(b.k)}" onchange="up(() => S.bud[${i}].k = this.value)"></td>
-            <td><button class="x" onclick="up(() => S.bud.splice(${i}, 1))">×</button></td>
+        <thead>
+          <tr style="font-size:11px;color:var(--mu);text-align:left;">
+            <th>항목</th><th>금액</th><th>통화</th><th>분류</th><th>정산상태</th><th></th>
           </tr>
-        `).join("")}
+        </thead>
+        <tbody>
+          ${sharedList.map((b, i) => `
+            <tr>
+              <td><input style="width:115px" value="${E(b.n)}" placeholder="항공, 숙소 등" onchange="up(() => S.bud[${i}].n = this.value)"></td>
+              <td><input type="number" style="width:75px" value="${b.a || ''}" placeholder="0" onchange="up(() => S.bud[${i}].a = +this.value)"></td>
+              <td>
+                <select onchange="up(() => S.bud[${i}].c = this.value)">
+                  <option ${b.c === 'USD' ? 'selected' : ''}>USD</option>
+                  <option ${b.c === 'KRW' ? 'selected' : ''}>KRW</option>
+                </select>
+              </td>
+              <td><input style="width:65px" value="${E(b.k)}" placeholder="교통/식비" onchange="up(() => S.bud[${i}].k = this.value)"></td>
+              <td>
+                <select style="color:${b.st === 'Y' ? '#10b981' : '#f59e0b'};font-weight:700;" onchange="up(() => S.bud[${i}].st = this.value)">
+                  <option value="Y" ${b.st === 'Y' ? 'selected' : ''}>완료</option>
+                  <option value="N" ${b.st !== 'Y' ? 'selected' : ''}>미정산</option>
+                </select>
+              </td>
+              <td><button class="x" onclick="up(() => S.bud.splice(${i}, 1))">×</button></td>
+            </tr>
+          `).join('')}
+        </tbody>
       </table>
-      <button class="btn g" style="margin-top:8px;width:100%;padding:8px;" onclick="up(() => S.bud.push({ n: '', a: 0, c: 'USD', k: '기타' }))">+ 항목 추가</button>
+      <button class="btn g" style="margin-top:8px;width:100%;padding:7px;" onclick="up(() => S.bud.push({ n: '', a: 0, c: 'USD', k: '식비', st: 'N' }))">
+        + 공용 항목 추가
+      </button>
+
+      <!-- 공용 카테고리별 비중 바 차트 -->
+      <div style="margin-top:14px;padding-top:10px;border-top:1px dashed var(--ln);">
+        <div class="sm" style="font-weight:700;margin-bottom:6px;">📊 공용 지출 비중</div>
+        ${Object.entries(cats).map(([k, v]) => `
+          <div class="sm" style="display:flex;justify-content:space-between;margin-bottom:2px;">
+            <span>${E(k)}</span>
+            <span>$${f(v)} (${sharedTotal ? Math.round((v / sharedTotal) * 100) : 0}%)</span>
+          </div>
+          <div class="bar" style="margin-bottom:6px;"><i style="width:${sharedTotal ? (v / sharedTotal) * 100 : 0}%"></i></div>
+        `).join('')}
+      </div>
     </div>
 
-    <div class="card">
-      ${Object.entries(cats).map(([k, v]) => `
-        <div class="sm" style="display:flex;justify-content:space-between;margin-bottom:2px;">
-          <span>${E(k)}</span>
-          <span>$${f(v)}</span>
+    <!-- [3] 🛍️ 개인 지출 섹션 (혜민 / 은주 개별 지출) -->
+    <div class="card ov">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <div>
+          <b style="font-size:14px;">🛍️ 개인 지출 (각자 부담)</b>
+          <span class="sm" style="margin-left:6px;color:var(--mu);">혜민 $${f(hyeminTotal)} · 은주 $${f(eunjuTotal)}</span>
         </div>
-        <div class="bar" style="margin-bottom:6px;"><i style="width:${T ? (v / T) * 100 : 0}%"></i></div>
-      `).join("")}
+      </div>
+
+      <table>
+        <thead>
+          <tr style="font-size:11px;color:var(--mu);text-align:left;">
+            <th>누구</th><th>항목(쇼핑/기념품 등)</th><th>금액</th><th>통화</th><th>정산상태</th><th></th>
+          </tr>
+        </thead>
+        <tbody>
+          ${personalList.map((p, i) => `
+            <tr>
+              <td>
+                <select style="font-weight:700;width:70px;" onchange="up(() => S.personal[${i}].who = this.value)">
+                  <option value="혜민" ${(p.who || '혜민') === '혜민' ? 'selected' : ''}>혜민</option>
+                  <option value="은주" ${p.who === '은주' ? 'selected' : ''}>은주</option>
+                </select>
+              </td>
+              <td><input style="width:130px" value="${E(p.n)}" placeholder="개인 쇼핑품목" onchange="up(() => S.personal[${i}].n = this.value)"></td>
+              <td><input type="number" style="width:75px" value="${p.a || ''}" placeholder="0" onchange="up(() => S.personal[${i}].a = +this.value)"></td>
+              <td>
+                <select onchange="up(() => S.personal[${i}].c = this.value)">
+                  <option ${p.c === 'USD' ? 'selected' : ''}>USD</option>
+                  <option ${p.c === 'KRW' ? 'selected' : ''}>KRW</option>
+                </select>
+              </td>
+              <td>
+                <select style="color:${p.st === 'Y' ? '#10b981' : '#f59e0b'};font-weight:700;" onchange="up(() => S.personal[${i}].st = this.value)">
+                  <option value="Y" ${p.st === 'Y' ? 'selected' : ''}>완료</option>
+                  <option value="N" ${p.st !== 'Y' ? 'selected' : ''}>미정산</option>
+                </select>
+              </td>
+              <td><button class="x" onclick="up(() => S.personal.splice(${i}, 1))">×</button></td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+      <button class="btn g" style="margin-top:8px;width:100%;padding:7px;" onclick="up(() => S.personal.push({ who: '혜민', n: '', a: 0, c: 'USD', st: 'N' }))">
+        + 개인 지출 추가
+      </button>
     </div>
   `;
 }
@@ -885,15 +1025,19 @@ function render() {
   }
 }
 
-// 로컬 캐시 확인
+// 1. 기존 로컬 캐시 확인
 try {
   const L = localStorage.getItem("guam_trip_cloud_v1");
   if (L) {
     const parsed = JSON.parse(L);
-    if (parsed && Array.isArray(parsed.days)) S = parsed;
+    if (parsed && Array.isArray(parsed.days)) {
+      S = parsed;
+      if (!S.personal) S.personal = [];
+    }
   }
 } catch (e) {}
 
+// 2. 초기 렌더 및 클라우드 실시간 동기화 시작
 fitCurrentRoute();
 render();
 initRealtimeSync();
