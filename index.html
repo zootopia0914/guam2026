@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>혜민이와 은주의 괌 여행</title>
+  <title>guam</title>
 
   <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -44,7 +44,7 @@
       color: var(--tx);
       font: 14.5px/1.4 -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
     }
-    .w { max-width: 680px; margin: 0 auto; padding: 10px 12px 36px; }
+    .w { max-width: 720px; margin: 0 auto; padding: 10px 12px 36px; }
     .hero { padding: 4px 2px 6px; }
     h1 { font-size: 22px; margin: 0 0 3px; letter-spacing: -0.5px; font-weight: 800; }
     .sub { color: var(--mu); font-size: 12.5px; line-height: 1.3; }
@@ -286,7 +286,7 @@ try {
 
 const TABS = ["일정", "예산", "준비물", "예약"];
 
-// 기본 데이터 (로컬/오프라인 및 첫 접속 시 빈 화면 깜빡임/에러 방지용 완전체)
+// 기본 데이터 (pay: "선결제" | "현금" | "카드", st: "Y" | "N")
 const defaultS = {
   days: [
     {
@@ -351,25 +351,31 @@ const defaultS = {
     }
   ],
   bud: [
-    { n: "항공권", a: 950000, c: "KRW", k: "교통", st: "Y" },
-    { n: "숙소", a: 1200000, c: "KRW", k: "숙박", st: "Y" },
-    { n: "렌터카", a: 320, c: "USD", k: "교통", st: "N" },
-    { n: "식비", a: 450, c: "USD", k: "식비", st: "N" },
-    { n: "입장료·투어", a: 160, c: "USD", k: "액티비티", st: "N" },
-    { n: "공용 쇼핑/간식", a: 200, c: "USD", k: "쇼핑", st: "N" }
+    { n: "항공권", a: 950000, c: "KRW", k: "교통", pay: "선결제", st: "Y" },
+    { n: "숙소", a: 1200000, c: "KRW", k: "숙박", pay: "선결제", st: "Y" },
+    { n: "렌터카", a: 320, c: "USD", k: "교통", pay: "카드", st: "N" },
+    { n: "식비", a: 450, c: "USD", k: "식비", pay: "현금", st: "N" },
+    { n: "입장료·투어", a: 160, c: "USD", k: "액티비티", pay: "선결제", st: "N" },
+    { n: "공용 쇼핑/간식", a: 200, c: "USD", k: "쇼핑", pay: "카드", st: "N" }
   ],
   personal: [
-    { who: "혜민", n: "개인 쇼핑 (타미)", a: 80, c: "USD", st: "N" },
-    { who: "은주", n: "개인 선물", a: 60, c: "USD", st: "N" }
+    { who: "혜민", n: "개인 쇼핑 (타미)", a: 80, c: "USD", pay: "카드", st: "N" },
+    { who: "은주", n: "개인 선물", a: 60, c: "USD", pay: "현금", st: "N" }
   ],
   rate: 1400,
   pax: 2,
   chk: [
-    { g: "필수", i: [["여권 (유효기간 6개월 이상)", 0], ["항공권 E-Ticket 및 바우처", 0], ["전자세관신고서(Guam EDF)", 0]] },
-    { g: "기타", i: [["110V 돼지코", 0], ["상비약", 0]] }
+    { g: "필수", i: [["여권 (유효기간 6개월 이상)", 0], ["항공권 E-Ticket 및 호텔 바우처", 0], ["전자세관신고서(Guam EDF) 작성", 0], ["해외결제 신용카드 및 현금 USD", 0], ["여행자 보험 가입증명서", 0]] },
+    { g: "전자기기", i: [["110V 돼지코 어댑터", 0], ["휴대폰 충전기 및 보조배터리", 0], ["eSIM / 로밍 설정", 0], ["방수팩", 0]] },
+    { g: "해변·액티비티", i: [["수영복 / 래시가드", 0], ["선크림 (SPF 50+) 및 선글라스", 0], ["아쿠아슈즈 및 스노클 장비", 0], ["비치타월", 0]] },
+    { g: "기타", i: [["상비약", 0], ["국제운전면허증 및 국내면허증", 0], ["가벼운 바람막이 겉옷", 0]] }
   ],
   res: [
-    { k: "항공", n: "괌 → 인천", w: "12/10 (목) 02:50", no: "KE422", m: "공항 2시간 반 전 도착" }
+    { k: "항공", n: "인천 → 괌", w: "12/5 (토) 01:40 도착", no: "7C3102", m: "입국 수속" },
+    { k: "항공", n: "괌 → 인천", w: "12/10 (목) 02:50", no: "KE422", m: "공항 2시간 반 전 도착" },
+    { k: "숙소", n: "괌 플라자", w: "12/5 ~ 12/7 (2박)", no: "RES-101", m: "체크인 15:00 / 아웃 11:00" },
+    { k: "숙소", n: "리가로얄 라구나", w: "12/7 ~ 12/9 (2박)", no: "RES-102", m: "체크인 15:00 / 아웃 11:00" },
+    { k: "렌터카", n: "남부 & 쇼핑 렌트", w: "12/7 10:00 ~ 12/9 23:30", no: "CAR-412", m: "공항 반납" }
   ]
 };
 
@@ -420,13 +426,12 @@ const GUAM_GEO = {
   "리티디안": [13.6552, 144.8610], "마이크로네시아몰": [13.5238, 144.8175]
 };
 
-// [위치검색 기능] 1차 내부 사전 매핑 → 2차 온라인 지오코딩 검색 → 없으면 alert 알림
+// [위치검색 기능] 내부 사전 → 온라인 검색 → 실패 시 alert
 async function autoFindCoords(dIdx, sIdx, name, rowEl, showAlert = true) {
   if (!name || !name.trim()) return;
   const raw = name.trim();
   const clean = raw.toLowerCase().replace(/[^a-z0-9가-힣]/g, "");
 
-  // 1차: 내부 사전 매칭
   for (const [k, c] of Object.entries(GUAM_GEO)) {
     if (clean.includes(k)) {
       applyCoords(dIdx, sIdx, c[0], c[1], rowEl);
@@ -434,7 +439,6 @@ async function autoFindCoords(dIdx, sIdx, name, rowEl, showAlert = true) {
     }
   }
 
-  // 2차: 온라인 지오코딩 조회
   updateStatus("좌표 검색 중...", "sync");
   try {
     const q = encodeURIComponent(raw + " Guam");
@@ -450,10 +454,9 @@ async function autoFindCoords(dIdx, sIdx, name, rowEl, showAlert = true) {
       }
     }
   } catch (err) {
-    console.error("지오코딩 조회 에러:", err);
+    console.error("지오코딩 에러:", err);
   }
 
-  // 실패 시 alert 노출
   updateStatus("실시간 동기화됨 ✓", "ok");
   if (showAlert) {
     alert(`‘${raw}’의 괌 내 위치 좌표를 찾을 수 없습니다.\n위도와 경도를 직접 입력해 주세요.`);
@@ -504,7 +507,7 @@ function up(f) {
   render();
 }
 
-// Firebase 리스너 연결
+// Firebase 실시간 동기화 리스너
 function initRealtimeSync() {
   if (!docRef) return;
   docRef.onSnapshot(doc => {
@@ -521,7 +524,7 @@ function initRealtimeSync() {
       docRef.set(defaultS);
     }
   }, err => {
-    console.error("동기화 연결 오류:", err);
+    console.error("동기화 에러:", err);
     updateStatus("연결 오류", "err");
   });
 }
@@ -783,7 +786,7 @@ function vSch() {
 }
 
 // ==========================================
-// 2. 예산 탭 (정산금에서 개인 지출 제외 버전)
+// 2. 예산 탭 (결제수단: 선결제/현금/카드 추가)
 // ==========================================
 function usd(b) {
   return b.c === "USD" ? +b.a : +b.a / (S.rate || 1400);
@@ -803,11 +806,17 @@ function vBud() {
   const sharedUnsettled = sharedTotal - sharedSettled;
   const sharedPerPerson = sharedTotal / 2;
 
-  // 2. 개인별 개별 지출 (단독 확인용)
+  // 2. 결제 수단별 집계 (공용 + 개인 전체 기준)
+  const allItems = [...sharedList, ...personalList];
+  const prepayTotal = allItems.filter(b => (b.pay || "선결제") === "선결제").reduce((s, b) => s + usd(b), 0);
+  const cashTotal   = allItems.filter(b => b.pay === "현금").reduce((s, b) => s + usd(b), 0);
+  const cardTotal   = allItems.filter(b => b.pay === "카드").reduce((s, b) => s + usd(b), 0);
+
+  // 3. 개인별 개별 지출 (단독 확인용)
   const hyeminTotal = personalList.filter(p => (p.who || "혜민") === "혜민").reduce((s, b) => s + usd(b), 0);
   const eunjuTotal = personalList.filter(p => p.who === "은주").reduce((s, b) => s + usd(b), 0);
 
-  // 3. 정산 게이지 (공용 경비 기준 정산율)
+  // 4. 정산 게이지 (공용 경비 기준 정산율)
   const grandPct = sharedTotal > 0 ? (sharedSettled / sharedTotal) * 100 : 0;
 
   // 공용 카테고리별 비중
@@ -847,7 +856,7 @@ function vBud() {
             $${f(sharedPerPerson)}
           </div>
           <div class="sm" style="color:var(--mu);">≈ ${f(sharedPerPerson * rate)}원</div>
-          <div class="sm" style="margin-top:3px;font-size:11px;color:var(--mu);">🛍️ 개인 지출 $${f(hyeminTotal)} 제외됨</div>
+          <div class="sm" style="margin-top:3px;font-size:11px;color:var(--mu);">🛍️ 개인 지출 $${f(hyeminTotal)} 별도</div>
         </div>
 
         <div style="background:var(--bg);padding:10px;border-radius:12px;border:1px solid var(--ln);">
@@ -856,7 +865,26 @@ function vBud() {
             $${f(sharedPerPerson)}
           </div>
           <div class="sm" style="color:var(--mu);">≈ ${f(sharedPerPerson * rate)}원</div>
-          <div class="sm" style="margin-top:3px;font-size:11px;color:var(--mu);">🛍️ 개인 지출 $${f(eunjuTotal)} 제외됨</div>
+          <div class="sm" style="margin-top:3px;font-size:11px;color:var(--mu);">🛍️ 개인 지출 $${f(eunjuTotal)} 별도</div>
+        </div>
+      </div>
+
+      <!-- 결제 수단별 총 지출 요약 배지 -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:10px;text-align:center;">
+        <div style="background:var(--bg);padding:7px;border-radius:10px;border:1px solid var(--ln);">
+          <div class="sm" style="font-size:11px;">💳 선결제 완료</div>
+          <div style="font-weight:800;font-size:13px;color:#2563eb;margin-top:2px;">$${f(prepayTotal)}</div>
+          <div class="sm" style="font-size:10px;">≈ ${f(prepayTotal * rate)}원</div>
+        </div>
+        <div style="background:var(--bg);padding:7px;border-radius:10px;border:1px solid var(--ln);">
+          <div class="sm" style="font-size:11px;">💵 현지 현금 필요</div>
+          <div style="font-weight:800;font-size:13px;color:#10b981;margin-top:2px;">$${f(cashTotal)}</div>
+          <div class="sm" style="font-size:10px;">≈ ${f(cashTotal * rate)}원</div>
+        </div>
+        <div style="background:var(--bg);padding:7px;border-radius:10px;border:1px solid var(--ln);">
+          <div class="sm" style="font-size:11px;">💳 현장 카드 결제</div>
+          <div style="font-weight:800;font-size:13px;color:#8b5cf6;margin-top:2px;">$${f(cardTotal)}</div>
+          <div class="sm" style="font-size:10px;">≈ ${f(cardTotal * rate)}원</div>
         </div>
       </div>
 
@@ -878,23 +906,36 @@ function vBud() {
       <table>
         <thead>
           <tr style="font-size:11px;color:var(--mu);text-align:left;">
-            <th>항목</th><th>금액</th><th>통화</th><th>분류</th><th>정산상태</th><th></th>
+            <th>항목</th>
+            <th>금액</th>
+            <th>통화</th>
+            <th>분류</th>
+            <th>결제수단</th>
+            <th>정산상태</th>
+            <th></th>
           </tr>
         </thead>
         <tbody>
           ${sharedList.map((b, i) => `
             <tr>
-              <td><input style="width:115px" value="${E(b.n)}" placeholder="항공, 숙소 등" onchange="up(() => S.bud[${i}].n = this.value)"></td>
-              <td><input type="number" style="width:75px" value="${b.a || ''}" placeholder="0" onchange="up(() => S.bud[${i}].a = +this.value)"></td>
+              <td><input style="width:105px" value="${E(b.n)}" placeholder="항공, 숙소 등" onchange="up(() => S.bud[${i}].n = this.value)"></td>
+              <td><input type="number" style="width:72px" value="${b.a || ''}" placeholder="0" onchange="up(() => S.bud[${i}].a = +this.value)"></td>
               <td>
                 <select onchange="up(() => S.bud[${i}].c = this.value)">
                   <option ${b.c === 'USD' ? 'selected' : ''}>USD</option>
                   <option ${b.c === 'KRW' ? 'selected' : ''}>KRW</option>
                 </select>
               </td>
-              <td><input style="width:65px" value="${E(b.k)}" placeholder="교통/식비" onchange="up(() => S.bud[${i}].k = this.value)"></td>
+              <td><input style="width:60px" value="${E(b.k)}" placeholder="교통/식비" onchange="up(() => S.bud[${i}].k = this.value)"></td>
               <td>
-                <select style="color:${b.st === 'Y' ? '#10b981' : '#f59e0b'};font-weight:700;" onchange="up(() => S.bud[${i}].st = this.value)">
+                <select style="font-weight:600;font-size:12px;" onchange="up(() => S.bud[${i}].pay = this.value)">
+                  <option value="선결제" ${(b.pay || '선결제') === '선결제' ? 'selected' : ''}>💳 선결제</option>
+                  <option value="현금" ${b.pay === '현금' ? 'selected' : ''}>💵 현금</option>
+                  <option value="카드" ${b.pay === '카드' ? 'selected' : ''}>💳 카드</option>
+                </select>
+              </td>
+              <td>
+                <select style="color:${b.st === 'Y' ? '#10b981' : '#f59e0b'};font-weight:700;font-size:12px;" onchange="up(() => S.bud[${i}].st = this.value)">
                   <option value="Y" ${b.st === 'Y' ? 'selected' : ''}>완료</option>
                   <option value="N" ${b.st !== 'Y' ? 'selected' : ''}>미정산</option>
                 </select>
@@ -904,7 +945,7 @@ function vBud() {
           `).join('')}
         </tbody>
       </table>
-      <button class="btn g" style="margin-top:8px;width:100%;padding:7px;" onclick="up(() => S.bud.push({ n: '', a: 0, c: 'USD', k: '식비', st: 'N' }))">
+      <button class="btn g" style="margin-top:8px;width:100%;padding:7px;" onclick="up(() => S.bud.push({ n: '', a: 0, c: 'USD', k: '식비', pay: '현금', st: 'N' }))">
         + 공용 항목 추가
       </button>
 
@@ -933,20 +974,26 @@ function vBud() {
       <table>
         <thead>
           <tr style="font-size:11px;color:var(--mu);text-align:left;">
-            <th>누구</th><th>항목(쇼핑/기념품 등)</th><th>금액</th><th>통화</th><th>결제상태</th><th></th>
+            <th>누구</th>
+            <th>항목(쇼핑/기념품 등)</th>
+            <th>금액</th>
+            <th>통화</th>
+            <th>결제수단</th>
+            <th>결제상태</th>
+            <th></th>
           </tr>
         </thead>
         <tbody>
           ${personalList.map((p, i) => `
             <tr>
               <td>
-                <select style="font-weight:700;width:70px;" onchange="up(() => S.personal[${i}].who = this.value)">
+                <select style="font-weight:700;width:68px;" onchange="up(() => S.personal[${i}].who = this.value)">
                   <option value="혜민" ${(p.who || '혜민') === '혜민' ? 'selected' : ''}>혜민</option>
                   <option value="은주" ${p.who === '은주' ? 'selected' : ''}>은주</option>
                 </select>
               </td>
-              <td><input style="width:130px" value="${E(p.n)}" placeholder="개인 쇼핑품목" onchange="up(() => S.personal[${i}].n = this.value)"></td>
-              <td><input type="number" style="width:75px" value="${p.a || ''}" placeholder="0" onchange="up(() => S.personal[${i}].a = +this.value)"></td>
+              <td><input style="width:115px" value="${E(p.n)}" placeholder="개인 쇼핑품목" onchange="up(() => S.personal[${i}].n = this.value)"></td>
+              <td><input type="number" style="width:72px" value="${p.a || ''}" placeholder="0" onchange="up(() => S.personal[${i}].a = +this.value)"></td>
               <td>
                 <select onchange="up(() => S.personal[${i}].c = this.value)">
                   <option ${p.c === 'USD' ? 'selected' : ''}>USD</option>
@@ -954,7 +1001,14 @@ function vBud() {
                 </select>
               </td>
               <td>
-                <select style="color:${p.st === 'Y' ? '#10b981' : '#f59e0b'};font-weight:700;" onchange="up(() => S.personal[${i}].st = this.value)">
+                <select style="font-weight:600;font-size:12px;" onchange="up(() => S.personal[${i}].pay = this.value)">
+                  <option value="선결제" ${p.pay === '선결제' ? 'selected' : ''}>💳 선결제</option>
+                  <option value="현금" ${p.pay === '현금' ? 'selected' : ''}>💵 현금</option>
+                  <option value="카드" ${(p.pay || '카드') === '카드' ? 'selected' : ''}>💳 카드</option>
+                </select>
+              </td>
+              <td>
+                <select style="color:${p.st === 'Y' ? '#10b981' : '#f59e0b'};font-weight:700;font-size:12px;" onchange="up(() => S.personal[${i}].st = this.value)">
                   <option value="Y" ${p.st === 'Y' ? 'selected' : ''}>완료</option>
                   <option value="N" ${p.st !== 'Y' ? 'selected' : ''}>미정산</option>
                 </select>
@@ -964,7 +1018,7 @@ function vBud() {
           `).join('')}
         </tbody>
       </table>
-      <button class="btn g" style="margin-top:8px;width:100%;padding:7px;" onclick="up(() => S.personal.push({ who: '혜민', n: '', a: 0, c: 'USD', st: 'N' }))">
+      <button class="btn g" style="margin-top:8px;width:100%;padding:7px;" onclick="up(() => S.personal.push({ who: '혜민', n: '', a: 0, c: 'USD', pay: '카드', st: 'N' }))">
         + 개인 지출 추가
       </button>
     </div>
