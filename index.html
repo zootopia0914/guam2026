@@ -61,6 +61,7 @@
     .stt-ok   { background: #dcfce7; color: #166534; }
     .stt-err  { background: #fee2e2; color: #991b1b; }
 
+    /* 상단 고정 헤더 */
     .sticky-header {
       position: sticky;
       top: 0;
@@ -146,6 +147,7 @@
     .bar i { display: block; height: 100%; background: var(--ac); border-radius: 8px; transition: width 0.3s; }
     .ov { overflow-x: auto; }
 
+    /* 타임라인 뷰 */
     .timeline { position: relative; padding-left: 24px; margin-top: 2px; }
     .timeline::before {
       content: "";
@@ -204,6 +206,7 @@
     .cat-night  { background: #fef3c7; color: #b45309; }
     .cat-hotel  { background: #e2e8f0; color: #334155; }
     
+    /* 지도 컨테이너 */
     .map-container {
       position: relative;
       width: 100%;
@@ -248,7 +251,7 @@
 
 <script>
 // ==========================================
-// 사용자 제공 Firebase 설정값 적용 완료
+// Firebase 설정 (guam-27342)
 // ==========================================
 const firebaseConfig = {
   apiKey: "AIzaSyD4sAQxCv4YkaMR0BYear65sDwkYdXB_ZI",
@@ -283,7 +286,6 @@ try {
 
 const TABS = ["일정", "예산", "준비물", "예약"];
 
-// 기본 데이터 (Firestore 규격 준수: 중첩 배열 제거 {t, d})
 const defaultS = {
   days: [
     {
@@ -358,10 +360,10 @@ const defaultS = {
   rate: 1400,
   pax: 2,
   chk: [
-    { g: "필수", i: [{ t: "여권 (유효기간 6개월 이상)", d: 0 }, { t: "항공권 E-Ticket 및 호텔 바우처", d: 0 }, { t: "전자세관신고서(Guam EDF) 작성", d: 0 }, { t: "해외결제 신용카드 및 현금 USD", d: 0 }, { t: "여행자 보험 가입증명서", d: 0 }] },
-    { g: "전자기기", i: [{ t: "110V 돼지코 어댑터", d: 0 }, { t: "휴대폰 충전기 및 보조배터리", d: 0 }, { t: "eSIM / 로밍 설정", d: 0 }, { t: "방수팩", d: 0 }] },
-    { g: "해변·액티비티", i: [{ t: "수영복 / 래시가드", d: 0 }, { t: "선크림 (SPF 50+) 및 선글라스", d: 0 }, { t: "아쿠아슈즈 및 스노클 장비", d: 0 }, { t: "비치타월", d: 0 }] },
-    { g: "기타", i: [{ t: "상비약", d: 0 }, { t: "국제운전면허증 및 국내면허증", d: 0 }, { t: "가벼운 바람막이 겉옷", d: 0 }] }
+    { g: "필수", i: [["여권 (유효기간 6개월 이상)", 0], ["항공권 E-Ticket 및 호텔 바우처", 0], ["전자세관신고서(Guam EDF) 작성", 0], ["해외결제 신용카드 및 현금 USD", 0], ["여행자 보험 가입증명서", 0]] },
+    { g: "전자기기", i: [["110V 돼지코 어댑터", 0], ["휴대폰 충전기 및 보조배터리", 0], ["eSIM / 로밍 설정", 0], ["방수팩", 0]] },
+    { g: "해변·액티비티", i: [["수영복 / 래시가드", 0], ["선크림 (SPF 50+) 및 선글라스", 0], ["아쿠아슈즈 및 스노클 장비", 0], ["비치타월", 0]] },
+    { g: "기타", i: [["상비약", 0], ["국제운전면허증 및 국내면허증", 0], ["가벼운 바람막이 겉옷", 0]] }
   ],
   res: [
     { k: "항공", n: "인천 → 괌", w: "12/5 (토) 01:40 도착", no: "7C3102", m: "입국 수속" },
@@ -372,23 +374,7 @@ const defaultS = {
   ]
 };
 
-// 기존 로컬스토리지 중첩 배열 호환 정제
-function sanitizeData(data) {
-  if (!data) return defaultS;
-  if (Array.isArray(data.chk)) {
-    data.chk.forEach(group => {
-      if (Array.isArray(group.i)) {
-        group.i = group.i.map(item => {
-          if (Array.isArray(item)) return { t: item[0] || "", d: item[1] || 0 };
-          return item;
-        });
-      }
-    });
-  }
-  return data;
-}
-
-let S = sanitizeData(JSON.parse(JSON.stringify(defaultS)));
+let S = JSON.parse(JSON.stringify(defaultS));
 let tab = 0, day = 0;
 let isEditMode = false;
 
@@ -398,14 +384,26 @@ let currentVB = { ...BASE_VB };
 const $ = s => document.querySelector(s);
 const E = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
+// [기능 1] 시간순 자동 정렬 함수
+function sortByTime(dayIdx) {
+  if (!S.days[dayIdx] || !S.days[dayIdx].s) return;
+  S.days[dayIdx].s.sort((a, b) => {
+    const timeA = (a.t || "").replace(/[^0-9]/g, "").padEnd(4, "0");
+    const timeB = (b.t || "").replace(/[^0-9]/g, "").padEnd(4, "0");
+    if (!a.t) return 1;
+    if (!b.t) return -1;
+    return timeA.localeCompare(timeB);
+  });
+}
+
+// 클라우드 저장
 let saveTimer = null;
 function save() {
-  S = sanitizeData(S);
   localStorage.setItem("guam_trip_cloud_v1", JSON.stringify(S));
   updateStatus("저장 중...", "sync");
 
   if (!docRef) {
-    updateStatus("오프라인 저장됨 ✓", "ok");
+    updateStatus("로컬 저장됨 ✓", "ok");
     return;
   }
 
@@ -428,15 +426,12 @@ function up(f) {
 }
 
 function initRealtimeSync() {
-  if (!docRef) {
-    updateStatus("오프라인 모드", "sync");
-    return;
-  }
+  if (!docRef) return;
   docRef.onSnapshot(doc => {
     if (doc.exists) {
       const data = doc.data();
       if (data && Array.isArray(data.days)) {
-        S = sanitizeData(data);
+        S = data;
         localStorage.setItem("guam_trip_cloud_v1", JSON.stringify(S));
         updateStatus("실시간 동기화됨 ✓", "ok");
         render();
@@ -470,6 +465,7 @@ function getCategoryBadge(name) {
   return `<span class="cat-badge cat-spot">📍 스폿</span>`;
 }
 
+// 괌 주요 장소 정밀 좌표 매핑 사전
 const GUAM_GEO = {
   "공항": [13.4839, 144.7972], "괌공항": [13.4839, 144.7972],
   "투몬": [13.5152, 144.8058], "투몬비치": [13.5152, 144.8058],
@@ -485,20 +481,23 @@ const GUAM_GEO = {
   "세티베이": [13.3313, 144.6608], "메리조": [13.2674, 144.6650],
   "이나라한": [13.2755, 144.7497], "마이티퍼플": [13.4750, 144.7504],
   "오카포인트": [13.4997, 144.7696], "아울렛": [13.4989, 144.7749], "gpo": [13.4989, 144.7749],
+  "프리미어": [13.4989, 144.7749],
   "칠리스": [13.4989, 144.7749], "롱혼": [13.4992, 144.7762],
   "케이마트": [13.5042, 144.8055], "k마트": [13.5042, 144.8055],
   "차모로": [13.4774, 144.7522], "차모로야시장": [13.4774, 144.7522]
 };
 
+// [기능 2] 장소 입력 시 좌표 자동 검색 함수
 function autoFindCoords(dIdx, sIdx, name) {
   if (!name || !name.trim()) return;
   const clean = name.trim().toLowerCase().replace(/[^a-z0-9가-힣]/g, "");
   for (const [k, c] of Object.entries(GUAM_GEO)) {
     if (clean.includes(k)) {
-      if (S.days[dIdx]?.s[sIdx]) {
+      if (S.days[dIdx] && S.days[dIdx].s[sIdx]) {
         S.days[dIdx].s[sIdx].a = c[0];
         S.days[dIdx].s[sIdx].o = c[1];
-        up();
+        save();
+        render();
         return;
       }
     }
@@ -710,13 +709,15 @@ function vSch() {
           `).join('')}
         </div>
       ` : `
-        <div style="margin-bottom:6px;" class="sm">💡 일정을 수정하거나 좌표를 변경할 수 있습니다.</div>
+        <div style="margin-bottom:6px;" class="sm">💡 시간을 수정하면 자동으로 시간순 정렬되고, 장소를 입력하면 좌표를 자동 검색합니다.</div>
         ${curDay.s.map((s, j) => `
           <div style="border-bottom:1px solid var(--ln);padding:8px 0;">
             <div class="row st">
-              <input value="${E(s.t)}" placeholder="10:00" onchange="up(() => S.days[${day}].s[${j}].t = this.value)">
+              <input value="${E(s.t)}" placeholder="10:00" 
+                onchange="up(() => { S.days[${day}].s[${j}].t = this.value; sortByTime(${day}); })">
               <input value="${E(s.n)}" placeholder="장소명" style="font-weight:600" 
-                onchange="const val = this.value; up(() => S.days[${day}].s[${j}].n = val); if(!S.days[${day}].s[${j}].a) autoFindCoords(${day}, ${j}, val);">
+                oninput="const val = this.value; S.days[${day}].s[${j}].n = val; autoFindCoords(${day}, ${j}, val);"
+                onchange="up(() => S.days[${day}].s[${j}].n = this.value)">
               <button class="x" title="삭제" onclick="up(() => S.days[${day}].s.splice(${j}, 1))">×</button>
             </div>
 
@@ -795,7 +796,7 @@ function vBud() {
 // 3. 준비물 탭
 function vChk() {
   let a = 0, n = 0;
-  S.chk.forEach(g => g.i.forEach(item => { n++; a += (item.d ? 1 : 0); }));
+  S.chk.forEach(g => g.i.forEach(i => { n++; a += i[1]; }));
 
   return `
     <div class="card">
@@ -806,15 +807,15 @@ function vChk() {
     ${S.chk.map((g, gi) => `
       <div class="card">
         <b>${E(g.g)}</b>
-        ${g.i.map((item, ii) => `
+        ${g.i.map((it, ii) => `
           <div style="display:flex;gap:7px;align-items:center;padding:4px 0;">
-            <input type="checkbox" ${item.d ? "checked" : ""} onchange="up(() => S.chk[${gi}].i[${ii}].d = this.checked ? 1 : 0)">
-            <span style="flex:1;${item.d ? "text-decoration:line-through;color:var(--mu)" : ""}">${E(item.t)}</span>
+            <input type="checkbox" ${it[1] ? "checked" : ""} onchange="up(() => S.chk[${gi}].i[${ii}][1] = this.checked ? 1 : 0)">
+            <span style="flex:1;${it[1] ? "text-decoration:line-through;color:var(--mu)" : ""}">${E(it[0])}</span>
             <button class="x" onclick="up(() => S.chk[${gi}].i.splice(${ii}, 1))">×</button>
           </div>
         `).join("")}
         <input placeholder="+ 새 준비물 입력 후 Enter" style="width:100%;margin-top:5px" 
-          onkeydown="if(event.key === 'Enter' && this.value.trim()){ const val = this.value.trim(); up(() => S.chk[${gi}].i.push({ t: val, d: 0 })); this.value = ''; }">
+          onkeydown="if(event.key === 'Enter' && this.value.trim()){ const val = this.value.trim(); up(() => S.chk[${gi}].i.push([val, 0])); this.value = ''; }">
       </div>
     `).join("")}
   `;
@@ -909,11 +910,12 @@ function render() {
   }
 }
 
+// 로컬 스토리지 확인 후 실행
 try {
   const L = localStorage.getItem("guam_trip_cloud_v1");
   if (L) {
     const parsed = JSON.parse(L);
-    if (parsed && Array.isArray(parsed.days)) S = sanitizeData(parsed);
+    if (parsed && Array.isArray(parsed.days)) S = parsed;
   }
 } catch (e) {}
 
