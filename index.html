@@ -309,6 +309,8 @@ const firebaseConfig = {
   measurementId: "G-H4N321D6DN"
 };
 
+const EDIT_PASSWORD = "zz123";
+
 let db = null;
 let docRef = null;
 
@@ -712,6 +714,26 @@ function resetMap() {
   updateSvgViewBox();
 }
 
+function toggleEditMode() {
+  // 이미 편집 모드일 때는 바로 '보기 모드'로 복귀
+  if (isEditMode) {
+    isEditMode = false;
+    render();
+    return;
+  }
+
+  // 편집 모드로 들어갈 때만 비밀번호 확인
+  const inputPw = prompt("일정을 편집하려면 비밀번호를 입력하세요:");
+  if (inputPw === null) return; // 취소 누른 경우
+
+  if (inputPw === EDIT_PASSWORD) {
+    isEditMode = true;
+    render();
+  } else {
+    alert("비밀번호가 일치하지 않습니다.");
+  }
+}
+
 function zoomMap(factor) {
   const cx = currentVB.x + currentVB.w / 2;
   const cy = currentVB.y + currentVB.h / 2;
@@ -803,8 +825,8 @@ function vSch() {
   return `
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
       <span class="sm" style="font-weight:700;color:var(--tx)">${curDay.s.length}개 방문 일정</span>
-      <button class="btn sm-btn ${isEditMode ? '' : 'g'}" onclick="isEditMode = !isEditMode; render();">
-        ${isEditMode ? '✓ 보기 모드로' : '✏️ 일정 편집'}
+      <button class="btn sm-btn ${isEditMode ? '' : 'g'}" onclick="toggleEditMode()">
+        ${isEditMode ? '✓ 보기 모드로' : '🔒 일정 편집'}
       </button>
     </div>
 
