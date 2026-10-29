@@ -46,7 +46,7 @@
     }
     .w { max-width: 720px; margin: 0 auto; padding: 10px 12px 36px; }
     .hero { padding: 4px 2px 6px; }
-    h1 { font-size: 22px; margin: 0 0 3px; letter-spacing: -0.5px; font-weight: 800; }
+    h1 { font-size: 22px; margin: 0 0 3px; letter-spacing: -0.5px; font-weight: 800; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
     .sub { color: var(--mu); font-size: 12.5px; line-height: 1.3; }
     
     #stt {
@@ -60,6 +60,16 @@
     .stt-sync { background: #fef3c7; color: #92400e; }
     .stt-ok   { background: #dcfce7; color: #166534; }
     .stt-err  { background: #fee2e2; color: #991b1b; }
+
+    .dday-badge {
+      font-size: 12px;
+      background: #ec4899;
+      color: #fff;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-weight: 800;
+      letter-spacing: 0;
+    }
 
     /* 상단 고정 헤더 */
     .sticky-header {
@@ -206,7 +216,7 @@
     .cat-night  { background: #fef3c7; color: #b45309; }
     .cat-hotel  { background: #e2e8f0; color: #334155; }
     
-    /* 지도 컨테이너 */
+    /* 지도 */
     .map-container {
       position: relative;
       width: 100%;
@@ -280,7 +290,10 @@
 <body>
 <div class="w">
   <div class="hero">
-    <h1>🌴 혜민이와 은주의 괌 여행</h1>
+    <h1>
+      🌴 혜민이와 은주의 괌 여행
+      <span id="ddayBadge" class="dday-badge">D-Day</span>
+    </h1>
     <div class="sub">
       12/5(토) 01:40 도착 → 12/10(목) 02:50 귀국편 · 2명 · 
       <span id="stt" class="stt-sync">연결 중...</span>
@@ -309,10 +322,11 @@ const firebaseConfig = {
   measurementId: "G-H4N321D6DN"
 };
 
-const EDIT_PASSWORD = "zz123";
-
 let db = null;
 let docRef = null;
+
+// 일정 편집 비밀번호
+const EDIT_PASSWORD = "1234";
 
 function updateStatus(text, type) {
   const el = document.getElementById("stt");
@@ -322,6 +336,25 @@ function updateStatus(text, type) {
   if (type === "sync") el.classList.add("stt-sync");
   else if (type === "ok") el.classList.add("stt-ok");
   else if (type === "err") el.classList.add("stt-err");
+}
+
+// D-Day 계산
+function updateDday() {
+  const badge = document.getElementById("ddayBadge");
+  if (!badge) return;
+  const targetYear = new Date().getFullYear();
+  let target = new Date(targetYear, 11, 5); // 12월 5일
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  
+  if (today > new Date(targetYear, 11, 10)) {
+    target = new Date(targetYear + 1, 11, 5);
+  }
+  
+  const diff = Math.ceil((target - today) / (1000 * 60 * 60 * 24));
+  if (diff > 0) badge.textContent = `D-${diff}`;
+  else if (diff === 0) badge.textContent = `D-DAY 🎉`;
+  else badge.textContent = `여행 중 🌴`;
 }
 
 try {
@@ -411,14 +444,11 @@ const defaultS = {
   ],
   rate: 1400,
   pax: 2,
-  chk: [
-    { g: "필수", i: [["여권 (유효기간 6개월 이상)", 0], ["항공권 E-Ticket 및 바우처", 0], ["전자세관신고서(Guam EDF)", 0]] },
-    { g: "기타", i: [["110V 돼지코", 0], ["상비약", 0]] }
-  ],
+  // 준비물 탭 빈 껍데기만 남김
+  chk: [],
   res: [
     { k: "항공", n: "괌 → 인천", w: "12/10 (목) 02:50", no: "KE422", m: "공항 2시간 반 전 도착" }
   ],
-  // 6일치 코디 룩북 (사진 img, e_img 포함)
   outfits: [
     { top: "편한 공항 셋업", btm: "조거팬츠", shoes: "운동화", swim: "-", memo: "새벽 도착 후 리조트 휴식", img: "", e_top: "루즈핏 티셔츠", e_btm: "슬랙스", e_shoes: "운동화", e_swim: "-", e_memo: "기내 에어컨 대비 가디건", e_img: "" },
     { top: "린넨 나시 & 셔츠", btm: "데님 반바지", shoes: "쪼리 / 샌들", swim: "비키니 / 물놀이복", memo: "투몬비치 물놀이 & 펍 맥주", img: "", e_top: "여름 롱원피스", e_btm: "-", e_shoes: "스트랩 샌들", e_swim: "모노키니", e_memo: "투몬비치 에메랄드빛 인생샷", e_img: "" },
@@ -438,6 +468,23 @@ let currentVB = { ...BASE_VB };
 
 const $ = s => document.querySelector(s);
 const E = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+// [일정 편집 모드 토글 (비밀번호 확인)]
+function toggleEditMode() {
+  if (isEditMode) {
+    isEditMode = false;
+    render();
+    return;
+  }
+  const inputPw = prompt("일정을 편집하려면 비밀번호를 입력하세요:");
+  if (inputPw === null) return;
+  if (inputPw === EDIT_PASSWORD) {
+    isEditMode = true;
+    render();
+  } else {
+    alert("비밀번호가 일치하지 않습니다.");
+  }
+}
 
 // [정렬 기능] 시간순 자동 오름차순 정렬
 function sortByTime(dayIdx) {
@@ -476,7 +523,7 @@ const GUAM_GEO = {
   "리티디안": [13.6552, 144.8610], "마이크로네시아몰": [13.5238, 144.8175]
 };
 
-// [위치검색 기능] 내부 사전 → 온라인 검색 → 실패 시 alert
+// [위치검색 기능]
 async function autoFindCoords(dIdx, sIdx, name, rowEl, showAlert = true) {
   if (!name || !name.trim()) return;
   const raw = name.trim();
@@ -528,7 +575,7 @@ function applyCoords(dIdx, sIdx, lat, lon, rowEl) {
   }
 }
 
-// [이미지 초경량 리사이징 함수 (가로 320px, JPEG 품질 0.55 -> 약 20KB 내외)]
+// [이미지 초경량 리사이징]
 function resizeImage(file, callback) {
   if (!file) return;
   const reader = new FileReader();
@@ -584,7 +631,7 @@ function up(f) {
   render();
 }
 
-// Firebase 리스너 연결
+// Firebase 리스너
 function initRealtimeSync() {
   if (!docRef) return;
   docRef.onSnapshot(doc => {
@@ -594,6 +641,7 @@ function initRealtimeSync() {
         S = data;
         if (!S.personal) S.personal = [];
         if (!S.outfits) S.outfits = defaultS.outfits;
+        if (!S.chk) S.chk = [];
         localStorage.setItem("guam_trip_cloud_v1", JSON.stringify(S));
         updateStatus("실시간 동기화됨 ✓", "ok");
         render();
@@ -714,26 +762,6 @@ function resetMap() {
   updateSvgViewBox();
 }
 
-function toggleEditMode() {
-  // 이미 편집 모드일 때는 바로 '보기 모드'로 복귀
-  if (isEditMode) {
-    isEditMode = false;
-    render();
-    return;
-  }
-
-  // 편집 모드로 들어갈 때만 비밀번호 확인
-  const inputPw = prompt("일정을 편집하려면 비밀번호를 입력하세요:");
-  if (inputPw === null) return; // 취소 누른 경우
-
-  if (inputPw === EDIT_PASSWORD) {
-    isEditMode = true;
-    render();
-  } else {
-    alert("비밀번호가 일치하지 않습니다.");
-  }
-}
-
 function zoomMap(factor) {
   const cx = currentVB.x + currentVB.w / 2;
   const cy = currentVB.y + currentVB.h / 2;
@@ -823,6 +851,15 @@ function vSch() {
   const curDay = S.days[day] || { s: [] };
 
   return `
+    <!-- 일몰 골든아워 위젯 -->
+    <div class="card" style="padding:8px 12px;margin-bottom:8px;background:var(--bg);display:flex;justify-content:space-between;align-items:center;">
+      <div style="font-size:12px;font-weight:700;color:var(--tx);display:flex;align-items:center;gap:5px;">
+        <span>🌅</span>
+        <span>괌 오늘 일몰: <b>18:02</b></span>
+      </div>
+      <div class="sm" style="color:var(--ac);font-weight:700;">인생샷 골든아워: 17:30 ~ 18:00</div>
+    </div>
+
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
       <span class="sm" style="font-weight:700;color:var(--tx)">${curDay.s.length}개 방문 일정</span>
       <button class="btn sm-btn ${isEditMode ? '' : 'g'}" onclick="toggleEditMode()">
@@ -884,10 +921,19 @@ function vSch() {
 }
 
 // ==========================================
-// 2. 예산 탭 (개인지출 제외 순수 공용 1/N 정산)
+// 2. 예산 탭
 // ==========================================
 function usd(b) {
   return b.c === "USD" ? +b.a : +b.a / (S.rate || 1400);
+}
+
+// 실시간 환율 계산기 동작
+function calcLiveRate(val) {
+  const resEl = document.getElementById("liveCalcRes");
+  if (!resEl) return;
+  const num = parseFloat(val) || 0;
+  const rate = S.rate || 1400;
+  resEl.textContent = Math.round(num * rate).toLocaleString();
 }
 
 function vBud() {
@@ -922,6 +968,24 @@ function vBud() {
   sharedList.forEach(b => cats[b.k] = (cats[b.k] || 0) + usd(b));
 
   return `
+    <!-- [쇼핑 필수템] 실시간 달러-원화 계산기 -->
+    <div class="card" style="padding:10px 14px;background:var(--bg);margin-bottom:8px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <span style="font-size:12px;font-weight:700;">🛍️ 실시간 달러 ➔ 원화 계산기</span>
+        <span class="sm">기준 환율 $1 = ${rate}원</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;margin-top:6px;">
+        <div style="display:flex;align-items:center;background:var(--cd);padding:4px 8px;border-radius:8px;border:1px solid var(--ln);flex:1;">
+          <span style="font-weight:700;margin-right:4px;">$</span>
+          <input type="number" placeholder="달러 입력" style="border:0;padding:2px;width:100%;font-size:14px;font-weight:700;" oninput="calcLiveRate(this.value)">
+        </div>
+        <span style="font-weight:700;">=</span>
+        <div style="flex:1;background:var(--cd);padding:6px 10px;border-radius:8px;border:1px solid var(--ln);font-size:14px;font-weight:800;color:var(--ac);text-align:right;">
+          <span id="liveCalcRes">0</span> 원
+        </div>
+      </div>
+    </div>
+
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:flex-end;">
         <div>
@@ -944,7 +1008,7 @@ function vBud() {
         </div>
       </div>
 
-      <!-- 1인당 순수 공용 정산액 카드 (개인지출 제외) -->
+      <!-- 1인당 순수 공용 정산액 카드 -->
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;">
         <div style="background:var(--bg);padding:10px;border-radius:12px;border:1px solid var(--ln);">
           <div style="font-size:12px;color:var(--mu);font-weight:700;">👤 혜민 정산 분담액 (1/N)</div>
@@ -965,7 +1029,7 @@ function vBud() {
         </div>
       </div>
 
-      <!-- 결제 수단별 총 지출 요약 배지 (글씨 크기 확대) -->
+      <!-- 결제 수단별 총 지출 요약 배지 -->
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:12px;text-align:center;">
         <div style="background:var(--bg);padding:10px 6px;border-radius:12px;border:1px solid var(--ln);">
           <div style="font-size:13px;font-weight:700;color:var(--tx);">💳 선결제</div>
@@ -998,7 +1062,7 @@ function vBud() {
           <span class="sm" style="margin-left:4px;color:var(--ac);font-weight:700;">$${f(sharedTotal)} (인당 $${f(sharedPerPerson)})</span>
         </div>
       </div>
-    
+
       <table style="width:100%;border-collapse:collapse;white-space:nowrap;">
         <thead>
           <tr style="font-size:10.5px;color:var(--mu);text-align:left;border-bottom:1px solid var(--ln);">
@@ -1057,70 +1121,70 @@ function vBud() {
       </div>
     </div>
 
-    <!-- 개인 지출 섹션 (여백 축소 및 너비 최적화) -->
-        <div class="card ov" style="padding: 10px;">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
-            <div>
-              <b style="font-size:13.5px;">🛍️ 개인 지출 (정산 제외 / 각자 부담)</b>
-              <span class="sm" style="margin-left:4px;color:var(--mu);">혜민 $${f(hyeminTotal)} · 은주 $${f(eunjuTotal)}</span>
-            </div>
-          </div>
-    
-          <table style="width:100%;border-collapse:collapse;white-space:nowrap;">
-            <thead>
-              <tr style="font-size:10.5px;color:var(--mu);text-align:left;border-bottom:1px solid var(--ln);">
-                <th style="padding:4px 2px;width:16%;">누구</th>
-                <th style="padding:4px 2px;width:32%;">항목</th>
-                <th style="padding:4px 2px;width:17%;">금액</th>
-                <th style="padding:4px 2px;width:12%;">통화</th>
-                <th style="padding:4px 2px;width:12%;">결제</th>
-                <th style="padding:4px 2px;width:11%;">상태</th>
-                <th style="padding:4px 0;width:20px;"></th>
-              </tr>
-            </thead>
-            <tbody>
-              ${personalList.map((p, i) => `
-                <tr style="border-bottom:1px solid rgba(0,0,0,0.03);">
-                  <td style="padding:3px 2px;">
-                    <select style="width:100%;padding:5px 2px;font-size:11.5px;font-weight:700;" onchange="up(() => S.personal[${i}].who = this.value)">
-                      <option value="혜민" ${(p.who || '혜민') === '혜민' ? 'selected' : ''}>혜민</option>
-                      <option value="은주" ${p.who === '은주' ? 'selected' : ''}>은주</option>
-                    </select>
-                  </td>
-                  <td style="padding:3px 2px;"><input style="width:100%;padding:5px 6px;font-size:12px;" value="${E(p.n)}" placeholder="개인 쇼핑품목" onchange="up(() => S.personal[${i}].n = this.value)"></td>
-                  <td style="padding:3px 2px;"><input type="number" style="width:100%;padding:5px 4px;font-size:12px;" value="${p.a || ''}" placeholder="0" onchange="up(() => S.personal[${i}].a = +this.value)"></td>
-                  <td style="padding:3px 2px;">
-                    <select style="width:100%;padding:5px 2px;font-size:11.5px;" onchange="up(() => S.personal[${i}].c = this.value)">
-                      <option ${p.c === 'USD' ? 'selected' : ''}>USD</option>
-                      <option ${p.c === 'KRW' ? 'selected' : ''}>KRW</option>
-                    </select>
-                  </td>
-                  <td style="padding:3px 2px;">
-                    <select style="width:100%;padding:5px 2px;font-size:11.5px;font-weight:600;" onchange="up(() => S.personal[${i}].pay = this.value)">
-                      <option value="선결제" ${p.pay === '선결제' ? 'selected' : ''}>선결제</option>
-                      <option value="현금" ${p.pay === '현금' ? 'selected' : ''}>현금</option>
-                      <option value="카드" ${(p.pay || '카드') === '카드' ? 'selected' : ''}>카드</option>
-                    </select>
-                  </td>
-                  <td style="padding:3px 2px;">
-                    <select style="width:100%;padding:5px 2px;font-size:11.5px;font-weight:700;color:${p.st === 'Y' ? '#10b981' : '#f59e0b'};" onchange="up(() => S.personal[${i}].st = this.value)">
-                      <option value="Y" ${p.st === 'Y' ? 'selected' : ''}>완료</option>
-                      <option value="N" ${p.st !== 'Y' ? 'selected' : ''}>미정산</option>
-                    </select>
-                  </td>
-                  <td style="padding:3px 0;text-align:center;"><button class="x" style="font-size:15px;padding:0;" onclick="up(() => S.personal.splice(${i}, 1))">×</button></td>
-                </tr>
-              `).join('')}
-            </tbody>
-          </table>
-          <button class="btn g" style="margin-top:8px;width:100%;padding:7px;" onclick="up(() => S.personal.push({ who: '혜민', n: '', a: 0, c: 'USD', pay: '카드', st: 'N' }))">
-            + 개인 지출 추가
-          </button>
+    <!-- 개인 지출 섹션 -->
+    <div class="card ov" style="padding: 10px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <div>
+          <b style="font-size:13.5px;">🛍️ 개인 지출 (정산 제외 / 각자 부담)</b>
+          <span class="sm" style="margin-left:4px;color:var(--mu);">혜민 $${f(hyeminTotal)} · 은주 $${f(eunjuTotal)}</span>
         </div>
+      </div>
+
+      <table style="width:100%;border-collapse:collapse;white-space:nowrap;">
+        <thead>
+          <tr style="font-size:10.5px;color:var(--mu);text-align:left;border-bottom:1px solid var(--ln);">
+            <th style="padding:4px 2px;width:16%;">누구</th>
+            <th style="padding:4px 2px;width:32%;">항목</th>
+            <th style="padding:4px 2px;width:17%;">금액</th>
+            <th style="padding:4px 2px;width:12%;">통화</th>
+            <th style="padding:4px 2px;width:12%;">결제</th>
+            <th style="padding:4px 2px;width:11%;">상태</th>
+            <th style="padding:4px 0;width:20px;"></th>
+          </tr>
+        </thead>
+        <tbody>
+          ${personalList.map((p, i) => `
+            <tr style="border-bottom:1px solid rgba(0,0,0,0.03);">
+              <td style="padding:3px 2px;">
+                <select style="width:100%;padding:5px 2px;font-size:11.5px;font-weight:700;" onchange="up(() => S.personal[${i}].who = this.value)">
+                  <option value="혜민" ${(p.who || '혜민') === '혜민' ? 'selected' : ''}>혜민</option>
+                  <option value="은주" ${p.who === '은주' ? 'selected' : ''}>은주</option>
+                </select>
+              </td>
+              <td style="padding:3px 2px;"><input style="width:100%;padding:5px 6px;font-size:12px;" value="${E(p.n)}" placeholder="개인 쇼핑품목" onchange="up(() => S.personal[${i}].n = this.value)"></td>
+              <td style="padding:3px 2px;"><input type="number" style="width:100%;padding:5px 4px;font-size:12px;" value="${p.a || ''}" placeholder="0" onchange="up(() => S.personal[${i}].a = +this.value)"></td>
+              <td style="padding:3px 2px;">
+                <select style="width:100%;padding:5px 2px;font-size:11.5px;" onchange="up(() => S.personal[${i}].c = this.value)">
+                  <option ${p.c === 'USD' ? 'selected' : ''}>USD</option>
+                  <option ${p.c === 'KRW' ? 'selected' : ''}>KRW</option>
+                </select>
+              </td>
+              <td style="padding:3px 2px;">
+                <select style="width:100%;padding:5px 2px;font-size:11.5px;font-weight:600;" onchange="up(() => S.personal[${i}].pay = this.value)">
+                  <option value="선결제" ${p.pay === '선결제' ? 'selected' : ''}>선결제</option>
+                  <option value="현금" ${p.pay === '현금' ? 'selected' : ''}>현금</option>
+                  <option value="카드" ${(p.pay || '카드') === '카드' ? 'selected' : ''}>카드</option>
+                </select>
+              </td>
+              <td style="padding:3px 2px;">
+                <select style="width:100%;padding:5px 2px;font-size:11.5px;font-weight:700;color:${p.st === 'Y' ? '#10b981' : '#f59e0b'};" onchange="up(() => S.personal[${i}].st = this.value)">
+                  <option value="Y" ${p.st === 'Y' ? 'selected' : ''}>완료</option>
+                  <option value="N" ${p.st !== 'Y' ? 'selected' : ''}>미정산</option>
+                </select>
+              </td>
+              <td style="padding:3px 0;text-align:center;"><button class="x" style="font-size:15px;padding:0;" onclick="up(() => S.personal.splice(${i}, 1))">×</button></td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+      <button class="btn g" style="margin-top:8px;width:100%;padding:7px;" onclick="up(() => S.personal.push({ who: '혜민', n: '', a: 0, c: 'USD', pay: '카드', st: 'N' }))">
+        + 개인 지출 추가
+      </button>
+    </div>
   `;
 }
 
-// 3. 준비물 탭
+// 3. 준비물 탭 (빈칸 항목 없이 깨끗한 상태)
 function vChk() {
   let a = 0, n = 0;
   (S.chk || []).forEach(g => (g.i || []).forEach(i => { n++; a += i[1]; }));
@@ -1131,9 +1195,19 @@ function vChk() {
       <div class="bar" style="margin-top:5px;"><i style="width:${n ? (a / n) * 100 : 0}%"></i></div>
     </div>
 
+    ${(S.chk || []).length === 0 ? `
+      <div class="card" style="text-align:center;padding:24px 12px;color:var(--mu);">
+        등록된 준비물 그룹이 없습니다.<br>
+        <button class="btn sm-btn g" style="margin-top:10px;" onclick="up(() => S.chk.push({ g: '필수 준비물', i: [] }))">+ 첫 준비물 그룹 만들기</button>
+      </div>
+    ` : ''}
+
     ${(S.chk || []).map((g, gi) => `
       <div class="card">
-        <b>${E(g.g)}</b>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+          <input value="${E(g.g)}" style="font-weight:700;font-size:14px;border:0;padding:2px 4px;background:none;" onchange="up(() => S.chk[${gi}].g = this.value)">
+          <button class="x" style="font-size:14px;" onclick="up(() => S.chk.splice(${gi}, 1))">그룹 삭제</button>
+        </div>
         ${(g.i || []).map((it, ii) => `
           <div style="display:flex;gap:7px;align-items:center;padding:4px 0;">
             <input type="checkbox" ${it[1] ? "checked" : ""} onchange="up(() => S.chk[${gi}].i[${ii}][1] = this.checked ? 1 : 0)">
@@ -1145,12 +1219,42 @@ function vChk() {
           onkeydown="if(event.key === 'Enter' && this.value.trim()){ const val = this.value.trim(); up(() => S.chk[${gi}].i.push([val, 0])); this.value = ''; }">
       </div>
     `).join("")}
+
+    ${(S.chk || []).length > 0 ? `
+      <button class="btn g" style="width:100%;padding:8px;" onclick="up(() => S.chk.push({ g: '새 카테고리', i: [] }))">+ 새 준비물 그룹 추가</button>
+    ` : ''}
   `;
 }
 
-// 4. 예약 탭
+// 4. 예약 탭 (입국 심사 & 호텔 영문 정보 퀵 시트 탑재)
 function vRes() {
   return `
+    <!-- 입국 심사 & 호텔 영문 정보 퀵 시트 -->
+    <div class="card" style="background:var(--bg);padding:10px 14px;border:1.5px solid var(--ac);">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <b style="font-size:13.5px;color:var(--ac);">✈️ 입국신고서 & 입국심사 퀵시트</b>
+        <a href="https://guamedf.quickpass.us/" target="_blank" rel="noopener noreferrer" style="font-size:11px;font-weight:700;color:#fff;background:var(--ac);padding:3px 8px;border-radius:6px;text-decoration:none;">
+          Guam EDF 작성 ↗
+        </a>
+      </div>
+      
+      <div style="font-size:12px;line-height:1.45;color:var(--tx);">
+        <div style="margin-bottom:4px;">
+          <b>🏨 1차 숙소 (12/5~12/7):</b><br>
+          <span style="font-weight:600;">Guam Plaza Resort</span><br>
+          <span class="sm">1328 Pale San Vitores Rd, Tumon, 96913 Guam (+1 671-646-7803)</span>
+        </div>
+        <div style="margin-top:6px;padding-top:4px;border-top:1px dashed var(--ln);">
+          <b>🏨 2차 숙소 (12/7~12/9):</b><br>
+          <span style="font-weight:600;">RIHGA Royal Laguna Guam Resort</span><br>
+          <span class="sm">470 Farenholt Ave, Tamuning, 96913 Guam (+1 671-646-9111)</span>
+        </div>
+        <div style="margin-top:6px;padding-top:4px;border-top:1px dashed var(--ln);" class="sm">
+          🚨 긴급 연락처: 괌 경찰/구급 <b>911</b> · 주하갓냐 대한민국 출장소: <b>+1 671-647-6488</b>
+        </div>
+      </div>
+    </div>
+
     <div class="card ov">
       <table>
         ${(S.res || []).map((r, i) => `
@@ -1176,7 +1280,7 @@ function vRes() {
 }
 
 // ==========================================
-// 5. 코디 탭 (초경량 자동 리사이징 사진 첨부 지원)
+// 5. 코디 탭
 // ==========================================
 function vOutfit() {
   if (!S.outfits) S.outfits = defaultS.outfits;
@@ -1196,7 +1300,7 @@ function vOutfit() {
     <!-- 혜민 & 은주 2인 코디 카드 그리드 -->
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
       
-      <!-- [1] 혜민 코디 -->
+      <!-- 혜민 코디 -->
       <div class="card" style="margin-bottom:0;padding:12px;">
         <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;padding-bottom:6px;border-bottom:1.5px solid var(--ln);">
           <span style="font-size:16px;">👗</span>
@@ -1230,7 +1334,6 @@ function vOutfit() {
               onchange="up(() => S.outfits[${day}].memo = this.value)">
           </div>
 
-          <!-- 혜민 착장 사진 영역 -->
           <div style="margin-top:6px;">
             <span class="sm" style="font-weight:700;">📸 착장 사진</span>
             ${o.img ? `
@@ -1240,7 +1343,7 @@ function vOutfit() {
               </div>
             ` : `
               <label class="img-upload-btn" style="width:100%;display:block;">
-                + 사진 선택 (자동 리사이즈)
+                + 사진 선택 (자동 압축)
                 <input type="file" accept="image/*" style="display:none;" onchange="resizeImage(this.files[0], data => up(() => S.outfits[${day}].img = data))">
               </label>
             `}
@@ -1248,7 +1351,7 @@ function vOutfit() {
         </div>
       </div>
 
-      <!-- [2] 은주 코디 -->
+      <!-- 은주 코디 -->
       <div class="card" style="margin-bottom:0;padding:12px;">
         <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;padding-bottom:6px;border-bottom:1.5px solid var(--ln);">
           <span style="font-size:16px;">👒</span>
@@ -1282,7 +1385,6 @@ function vOutfit() {
               onchange="up(() => S.outfits[${day}].e_memo = this.value)">
           </div>
 
-          <!-- 은주 착장 사진 영역 -->
           <div style="margin-top:6px;">
             <span class="sm" style="font-weight:700;">📸 착장 사진</span>
             ${o.e_img ? `
@@ -1292,7 +1394,7 @@ function vOutfit() {
               </div>
             ` : `
               <label class="img-upload-btn" style="width:100%;display:block;">
-                + 사진 선택 (자동 리사이즈)
+                + 사진 선택 (자동 압축)
                 <input type="file" accept="image/*" style="display:none;" onchange="resizeImage(this.files[0], data => up(() => S.outfits[${day}].e_img = data))">
               </label>
             `}
@@ -1345,12 +1447,12 @@ function switchDay(idx) {
 }
 
 function render() {
+  updateDday();
   $("#nav").innerHTML = TABS.map((t, i) => `
     <button class="${i === tab ? "on" : ""}" onclick="tab = ${i}; render();">${t}</button>
   `).join("");
 
   const subTabs = $("#subTabs");
-  // 일정(0)과 코디(4) 탭에서 날짜 칩 바 활성화
   if (tab === 0 || tab === 4) {
     subTabs.style.display = "flex";
     subTabs.innerHTML = S.days.map((d, i) => `
@@ -1376,6 +1478,7 @@ try {
       S = parsed;
       if (!S.personal) S.personal = [];
       if (!S.outfits) S.outfits = defaultS.outfits;
+      if (!S.chk) S.chk = [];
     }
   }
 } catch (e) {}
