@@ -229,6 +229,52 @@
     .map-btn:hover { background: var(--ac); color: #fff; }
     .geo-btn { font-size: 10.5px; padding: 4px 7px; border-radius: 7px; background: var(--ln); color: var(--tx); border: 0; cursor: pointer; white-space: nowrap; }
     .geo-btn:hover { background: var(--ac); color: #fff; }
+
+    /* 코디 사진 미리보기 카드 */
+    .outfit-img-wrap {
+      position: relative;
+      margin-top: 8px;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid var(--ln);
+      background: var(--bg);
+      aspect-ratio: 4 / 5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .outfit-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+    .img-upload-btn {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--ac);
+      background: rgba(37, 99, 235, 0.08);
+      padding: 5px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      text-align: center;
+      margin-top: 6px;
+      border: 1px dashed var(--ac);
+    }
+    .img-del-btn {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      background: rgba(0, 0, 0, 0.6);
+      color: #fff;
+      border: 0;
+      border-radius: 6px;
+      padding: 3px 6px;
+      font-size: 10px;
+      font-weight: 700;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
@@ -284,9 +330,8 @@ try {
   console.error("Firebase 초기화 에러:", e);
 }
 
-const TABS = ["일정", "예산", "준비물", "예약"];
+const TABS = ["일정", "예산", "준비물", "예약", "코디"];
 
-// 기본 데이터 (pay: "선결제" | "현금" | "카드", st: "Y" | "N")
 const defaultS = {
   days: [
     {
@@ -365,17 +410,20 @@ const defaultS = {
   rate: 1400,
   pax: 2,
   chk: [
-    { g: "필수", i: [["여권 (유효기간 6개월 이상)", 0], ["항공권 E-Ticket 및 호텔 바우처", 0], ["전자세관신고서(Guam EDF) 작성", 0], ["해외결제 신용카드 및 현금 USD", 0], ["여행자 보험 가입증명서", 0]] },
-    { g: "전자기기", i: [["110V 돼지코 어댑터", 0], ["휴대폰 충전기 및 보조배터리", 0], ["eSIM / 로밍 설정", 0], ["방수팩", 0]] },
-    { g: "해변·액티비티", i: [["수영복 / 래시가드", 0], ["선크림 (SPF 50+) 및 선글라스", 0], ["아쿠아슈즈 및 스노클 장비", 0], ["비치타월", 0]] },
-    { g: "기타", i: [["상비약", 0], ["국제운전면허증 및 국내면허증", 0], ["가벼운 바람막이 겉옷", 0]] }
+    { g: "필수", i: [["여권 (유효기간 6개월 이상)", 0], ["항공권 E-Ticket 및 바우처", 0], ["전자세관신고서(Guam EDF)", 0]] },
+    { g: "기타", i: [["110V 돼지코", 0], ["상비약", 0]] }
   ],
   res: [
-    { k: "항공", n: "인천 → 괌", w: "12/5 (토) 01:40 도착", no: "7C3102", m: "입국 수속" },
-    { k: "항공", n: "괌 → 인천", w: "12/10 (목) 02:50", no: "KE422", m: "공항 2시간 반 전 도착" },
-    { k: "숙소", n: "괌 플라자", w: "12/5 ~ 12/7 (2박)", no: "RES-101", m: "체크인 15:00 / 아웃 11:00" },
-    { k: "숙소", n: "리가로얄 라구나", w: "12/7 ~ 12/9 (2박)", no: "RES-102", m: "체크인 15:00 / 아웃 11:00" },
-    { k: "렌터카", n: "남부 & 쇼핑 렌트", w: "12/7 10:00 ~ 12/9 23:30", no: "CAR-412", m: "공항 반납" }
+    { k: "항공", n: "괌 → 인천", w: "12/10 (목) 02:50", no: "KE422", m: "공항 2시간 반 전 도착" }
+  ],
+  // 6일치 코디 룩북 (사진 img, e_img 포함)
+  outfits: [
+    { top: "편한 공항 셋업", btm: "조거팬츠", shoes: "운동화", swim: "-", memo: "새벽 도착 후 리조트 휴식", img: "", e_top: "루즈핏 티셔츠", e_btm: "슬랙스", e_shoes: "운동화", e_swim: "-", e_memo: "기내 에어컨 대비 가디건", e_img: "" },
+    { top: "린넨 나시 & 셔츠", btm: "데님 반바지", shoes: "쪼리 / 샌들", swim: "비키니 / 물놀이복", memo: "투몬비치 물놀이 & 펍 맥주", img: "", e_top: "여름 롱원피스", e_btm: "-", e_shoes: "스트랩 샌들", e_swim: "모노키니", e_memo: "투몬비치 에메랄드빛 인생샷", e_img: "" },
+    { top: "밝은 린넨 셔츠", btm: "반바지", shoes: "아쿠아슈즈 준비", swim: "스노클링 래시가드", memo: "남부투어 & 이나라한 자연풀장", img: "", e_top: "원색 나시탑", e_btm: "치마바지", e_shoes: "샌들 & 아쿠아슈즈", e_swim: "수영복", e_memo: "메리조 부두 데크 인생샷", e_img: "" },
+    { top: "반팔 크롭티", btm: "와이드 팬츠", shoes: "편한 운동화", swim: "호텔 풀 수영복", memo: "GPO & K마트 장시간 쇼핑 대비", img: "", e_top: "오프숄더 블라우스", e_btm: "청반바지", e_shoes: "슬립온", e_swim: "원피스 수영복", e_memo: "리가로얄 인피니티 풀 수영", e_img: "" },
+    { top: "수요야시장용 편한 티", btm: "린넨 숏팬츠", shoes: "편한 샌들", swim: "-", memo: "차모로 야시장 바비큐 구경", img: "", e_top: "반팔 티", e_btm: "밴딩 반바지", e_shoes: "쪼리", e_swim: "-", e_memo: "야시장 먹거리 탐방", e_img: "" },
+    { top: "출국용 편한 후드티", btm: "트레이닝 팬츠", shoes: "운동화", swim: "-", memo: "새벽 비행기 탑승 & 귀국", img: "", e_top: "기모 맨투맨", e_btm: "조거팬츠", e_shoes: "운동화", e_swim: "-", e_memo: "한국 도착 기온 대비 겉옷", e_img: "" }
   ]
 };
 
@@ -478,6 +526,33 @@ function applyCoords(dIdx, sIdx, lat, lon, rowEl) {
   }
 }
 
+// [이미지 초경량 리사이징 함수 (가로 320px, JPEG 품질 0.55 -> 약 20KB 내외)]
+function resizeImage(file, callback) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      const maxW = 320;
+      let w = img.width;
+      let h = img.height;
+      if (w > maxW) {
+        h = Math.round((h * maxW) / w);
+        w = maxW;
+      }
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(img, 0, 0, w, h);
+      const dataUrl = canvas.toDataURL("image/jpeg", 0.55);
+      callback(dataUrl);
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
 // 클라우드 저장
 let saveTimer = null;
 function save() {
@@ -507,7 +582,7 @@ function up(f) {
   render();
 }
 
-// Firebase 실시간 동기화 리스너
+// Firebase 리스너 연결
 function initRealtimeSync() {
   if (!docRef) return;
   docRef.onSnapshot(doc => {
@@ -516,6 +591,7 @@ function initRealtimeSync() {
       if (data && Array.isArray(data.days) && data.days.length > 0) {
         S = data;
         if (!S.personal) S.personal = [];
+        if (!S.outfits) S.outfits = defaultS.outfits;
         localStorage.setItem("guam_trip_cloud_v1", JSON.stringify(S));
         updateStatus("실시간 동기화됨 ✓", "ok");
         render();
@@ -786,7 +862,7 @@ function vSch() {
 }
 
 // ==========================================
-// 2. 예산 탭 (결제수단: 선결제/현금/카드 추가)
+// 2. 예산 탭 (개인지출 제외 순수 공용 1/N 정산)
 // ==========================================
 function usd(b) {
   return b.c === "USD" ? +b.a : +b.a / (S.rate || 1400);
@@ -806,17 +882,17 @@ function vBud() {
   const sharedUnsettled = sharedTotal - sharedSettled;
   const sharedPerPerson = sharedTotal / 2;
 
-  // 2. 결제 수단별 집계 (공용 + 개인 전체 기준)
+  // 2. 결제 수단별 집계 (전체)
   const allItems = [...sharedList, ...personalList];
   const prepayTotal = allItems.filter(b => (b.pay || "선결제") === "선결제").reduce((s, b) => s + usd(b), 0);
   const cashTotal   = allItems.filter(b => b.pay === "현금").reduce((s, b) => s + usd(b), 0);
   const cardTotal   = allItems.filter(b => b.pay === "카드").reduce((s, b) => s + usd(b), 0);
 
-  // 3. 개인별 개별 지출 (단독 확인용)
+  // 3. 개인별 지출
   const hyeminTotal = personalList.filter(p => (p.who || "혜민") === "혜민").reduce((s, b) => s + usd(b), 0);
   const eunjuTotal = personalList.filter(p => p.who === "은주").reduce((s, b) => s + usd(b), 0);
 
-  // 4. 정산 게이지 (공용 경비 기준 정산율)
+  // 4. 정산 게이지 (공용 경비 기준)
   const grandPct = sharedTotal > 0 ? (sharedSettled / sharedTotal) * 100 : 0;
 
   // 공용 카테고리별 비중
@@ -824,7 +900,6 @@ function vBud() {
   sharedList.forEach(b => cats[b.k] = (cats[b.k] || 0) + usd(b));
 
   return `
-    <!-- [1] 상단: 순수 공용 정산 요약 대시보드 -->
     <div class="card">
       <div style="display:flex;justify-content:space-between;align-items:flex-end;">
         <div>
@@ -837,7 +912,6 @@ function vBud() {
         </div>
       </div>
 
-      <!-- 정산 듀얼 진행률 게이지 바 -->
       <div style="margin-top:10px;">
         <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:3px;">
           <span>공용 정산 진행률 (${grandPct.toFixed(1)}%)</span>
@@ -869,7 +943,7 @@ function vBud() {
         </div>
       </div>
 
-      <!-- 결제 수단별 총 지출 요약 배지 -->
+      <!-- 결제 수단별 총 지출 요약 배지 (글씨 크기 확대) -->
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:12px;text-align:center;">
         <div style="background:var(--bg);padding:10px 6px;border-radius:12px;border:1px solid var(--ln);">
           <div style="font-size:13px;font-weight:700;color:var(--tx);">💳 선결제</div>
@@ -888,7 +962,13 @@ function vBud() {
         </div>
       </div>
 
-    <!-- [2] 🌴 공용 경비 섹션 (1/N 나눔) -->
+      <div class="row" style="grid-template-columns:auto 85px;margin-top:10px;">
+        <span class="sm">기준 환율 (1$ =)</span>
+        <input type="number" value="${rate}" onchange="up(() => S.rate = +this.value || 1400)">
+      </div>
+    </div>
+
+    <!-- 공용 경비 섹션 -->
     <div class="card ov">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
         <div>
@@ -900,13 +980,7 @@ function vBud() {
       <table>
         <thead>
           <tr style="font-size:11px;color:var(--mu);text-align:left;">
-            <th>항목</th>
-            <th>금액</th>
-            <th>통화</th>
-            <th>분류</th>
-            <th>결제수단</th>
-            <th>정산상태</th>
-            <th></th>
+            <th>항목</th><th>금액</th><th>통화</th><th>분류</th><th>결제수단</th><th>정산상태</th><th></th>
           </tr>
         </thead>
         <tbody>
@@ -943,7 +1017,6 @@ function vBud() {
         + 공용 항목 추가
       </button>
 
-      <!-- 공용 카테고리별 비중 바 차트 -->
       <div style="margin-top:14px;padding-top:10px;border-top:1px dashed var(--ln);">
         <div class="sm" style="font-weight:700;margin-bottom:6px;">📊 공용 지출 비중</div>
         ${Object.entries(cats).map(([k, v]) => `
@@ -956,7 +1029,7 @@ function vBud() {
       </div>
     </div>
 
-    <!-- [3] 🛍️ 개인 지출 섹션 (각자 지출 기록용) -->
+    <!-- 개인 지출 섹션 -->
     <div class="card ov">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
         <div>
@@ -968,13 +1041,7 @@ function vBud() {
       <table>
         <thead>
           <tr style="font-size:11px;color:var(--mu);text-align:left;">
-            <th>누구</th>
-            <th>항목(쇼핑/기념품 등)</th>
-            <th>금액</th>
-            <th>통화</th>
-            <th>결제수단</th>
-            <th>결제상태</th>
-            <th></th>
+            <th>누구</th><th>항목(쇼핑/기념품 등)</th><th>금액</th><th>통화</th><th>결제수단</th><th>결제상태</th><th></th>
           </tr>
         </thead>
         <tbody>
@@ -1074,6 +1141,138 @@ function vRes() {
   `;
 }
 
+// ==========================================
+// 5. 코디 탭 (초경량 자동 리사이징 사진 첨부 지원)
+// ==========================================
+function vOutfit() {
+  if (!S.outfits) S.outfits = defaultS.outfits;
+
+  const curDay = S.days[day] || { d: "일자", s: [] };
+  const o = S.outfits[day] || {};
+  const places = curDay.s.map(item => item.n).filter(Boolean).slice(0, 4).join(" → ");
+
+  return `
+    <div class="card" style="background:var(--bg);padding:10px 14px;">
+      <div style="font-size:12px;color:var(--mu);font-weight:700;">🌴 ${E(curDay.d)} 오늘의 동선 TPO</div>
+      <div style="font-size:13.5px;font-weight:700;color:var(--tx);margin-top:3px;">
+        ${places ? E(places) : '등록된 주요 일정이 없습니다.'}
+      </div>
+      <div class="sm" style="color:var(--ac);margin-top:2px;">
+        💡 사진을 등록하면 자동으로 20KB 내외로 가볍게 다이어트되어 Firestore에 저장됩니다!
+      </div>
+    </div>
+
+    <!-- 혜민 & 은주 2인 코디 카드 그리드 -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+      
+      <!-- [1] 혜민 코디 -->
+      <div class="card" style="margin-bottom:0;padding:12px;">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;padding-bottom:6px;border-bottom:1.5px solid var(--ln);">
+          <span style="font-size:16px;">👗</span>
+          <b style="font-size:14px;color:var(--ac);">혜민 코디</b>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:5px;">
+          <div>
+            <span class="sm" style="font-weight:700;">상의 / 아우터</span>
+            <input style="width:100%;margin-top:2px;" value="${E(o.top)}" placeholder="린넨 셔츠, 가디건" 
+              onchange="up(() => S.outfits[${day}].top = this.value)">
+          </div>
+          <div>
+            <span class="sm" style="font-weight:700;">하의</span>
+            <input style="width:100%;margin-top:2px;" value="${E(o.btm)}" placeholder="데님 숏팬츠, 롱스커트" 
+              onchange="up(() => S.outfits[${day}].btm = this.value)">
+          </div>
+          <div>
+            <span class="sm" style="font-weight:700;">신발 & 잡화</span>
+            <input style="width:100%;margin-top:2px;" value="${E(o.shoes)}" placeholder="쪼리, 선글라스, 모자" 
+              onchange="up(() => S.outfits[${day}].shoes = this.value)">
+          </div>
+          <div>
+            <span class="sm" style="font-weight:700;color:#0d9488;">수영복 / 물놀이</span>
+            <input style="width:100%;margin-top:2px;" value="${E(o.swim)}" placeholder="모노키니, 아쿠아슈즈" 
+              onchange="up(() => S.outfits[${day}].swim = this.value)">
+          </div>
+          <div>
+            <span class="sm" style="font-weight:700;">메모 / TPO</span>
+            <input style="width:100%;margin-top:2px;" value="${E(o.memo)}" placeholder="메리조 데크 인생샷용" 
+              onchange="up(() => S.outfits[${day}].memo = this.value)">
+          </div>
+
+          <!-- 혜민 착장 사진 영역 -->
+          <div style="margin-top:6px;">
+            <span class="sm" style="font-weight:700;">📸 착장 사진</span>
+            ${o.img ? `
+              <div class="outfit-img-wrap">
+                <img src="${o.img}" class="outfit-img" alt="혜민 코디">
+                <button class="img-del-btn" onclick="up(() => S.outfits[${day}].img = '')">✕ 삭제</button>
+              </div>
+            ` : `
+              <label class="img-upload-btn" style="width:100%;display:block;">
+                + 사진 선택 (자동 리사이즈)
+                <input type="file" accept="image/*" style="display:none;" onchange="resizeImage(this.files[0], data => up(() => S.outfits[${day}].img = data))">
+              </label>
+            `}
+          </div>
+        </div>
+      </div>
+
+      <!-- [2] 은주 코디 -->
+      <div class="card" style="margin-bottom:0;padding:12px;">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;padding-bottom:6px;border-bottom:1.5px solid var(--ln);">
+          <span style="font-size:16px;">👒</span>
+          <b style="font-size:14px;color:#ec4899;">은주 코디</b>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:5px;">
+          <div>
+            <span class="sm" style="font-weight:700;">상의 / 아우터</span>
+            <input style="width:100%;margin-top:2px;" value="${E(o.e_top)}" placeholder="반팔 크롭티, 바람막이" 
+              onchange="up(() => S.outfits[${day}].e_top = this.value)">
+          </div>
+          <div>
+            <span class="sm" style="font-weight:700;">하의</span>
+            <input style="width:100%;margin-top:2px;" value="${E(o.e_btm)}" placeholder="와이드 슬랙스, 반바지" 
+              onchange="up(() => S.outfits[${day}].e_btm = this.value)">
+          </div>
+          <div>
+            <span class="sm" style="font-weight:700;">신발 & 잡화</span>
+            <input style="width:100%;margin-top:2px;" value="${E(o.e_shoes)}" placeholder="편한 샌들, 캡모자" 
+              onchange="up(() => S.outfits[${day}].e_shoes = this.value)">
+          </div>
+          <div>
+            <span class="sm" style="font-weight:700;color:#0d9488;">수영복 / 물놀이</span>
+            <input style="width:100%;margin-top:2px;" value="${E(o.e_swim)}" placeholder="래시가드, 스노클링 마스크" 
+              onchange="up(() => S.outfits[${day}].e_swim = this.value)">
+          </div>
+          <div>
+            <span class="sm" style="font-weight:700;">메모 / TPO</span>
+            <input style="width:100%;margin-top:2px;" value="${E(o.e_memo)}" placeholder="GPO 쇼핑용 편한 신발" 
+              onchange="up(() => S.outfits[${day}].e_memo = this.value)">
+          </div>
+
+          <!-- 은주 착장 사진 영역 -->
+          <div style="margin-top:6px;">
+            <span class="sm" style="font-weight:700;">📸 착장 사진</span>
+            ${o.e_img ? `
+              <div class="outfit-img-wrap">
+                <img src="${o.e_img}" class="outfit-img" alt="은주 코디">
+                <button class="img-del-btn" onclick="up(() => S.outfits[${day}].e_img = '')">✕ 삭제</button>
+              </div>
+            ` : `
+              <label class="img-upload-btn" style="width:100%;display:block;">
+                + 사진 선택 (자동 리사이즈)
+                <input type="file" accept="image/*" style="display:none;" onchange="resizeImage(this.files[0], data => up(() => S.outfits[${day}].e_img = data))">
+              </label>
+            `}
+          </div>
+        </div>
+      </div>
+
+    </div>
+  `;
+}
+
 function attachMapEvents() {
   const container = document.getElementById("mapContainer");
   const svg = document.getElementById("interactiveSvg");
@@ -1110,7 +1309,7 @@ function attachMapEvents() {
 
 function switchDay(idx) {
   day = idx;
-  fitCurrentRoute();
+  if (tab === 0) fitCurrentRoute();
   render();
 }
 
@@ -1120,7 +1319,8 @@ function render() {
   `).join("");
 
   const subTabs = $("#subTabs");
-  if (tab === 0) {
+  // 일정(0)과 코디(4) 탭에서 날짜 칩 바 활성화
+  if (tab === 0 || tab === 4) {
     subTabs.style.display = "flex";
     subTabs.innerHTML = S.days.map((d, i) => `
       <button class="chip ${i === day ? "on" : ""}" onclick="switchDay(${i})">${E(d.d)}</button>
@@ -1129,14 +1329,14 @@ function render() {
     subTabs.style.display = "none";
   }
 
-  $("#v").innerHTML = [vSch, vBud, vChk, vRes][tab]();
+  $("#v").innerHTML = [vSch, vBud, vChk, vRes, vOutfit][tab]();
 
   if (tab === 0) {
     attachMapEvents();
   }
 }
 
-// 1. 기존 로컬 캐시 확인
+// 로컬 스토리지 캐시 확인
 try {
   const L = localStorage.getItem("guam_trip_cloud_v1");
   if (L) {
@@ -1144,11 +1344,11 @@ try {
     if (parsed && Array.isArray(parsed.days)) {
       S = parsed;
       if (!S.personal) S.personal = [];
+      if (!S.outfits) S.outfits = defaultS.outfits;
     }
   }
 } catch (e) {}
 
-// 2. 초기 렌더 및 클라우드 실시간 동기화 시작
 fitCurrentRoute();
 render();
 initRealtimeSync();
