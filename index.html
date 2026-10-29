@@ -951,10 +951,10 @@ function vBud() {
   const sharedUnsettled = sharedTotal - sharedSettled;
   const sharedPerPerson = sharedTotal / 2;
 
-  const allItems = [...sharedList, ...personalList];
-  const prepayTotal = allItems.filter(b => (b.pay || "선결제") === "선결제").reduce((s, b) => s + usd(b), 0);
-  const cashTotal   = allItems.filter(b => b.pay === "현금").reduce((s, b) => s + usd(b), 0);
-  const cardTotal   = allItems.filter(b => b.pay === "카드").reduce((s, b) => s + usd(b), 0);
+  // 2. 결제 수단별 집계 (공용 경비 기준만 집계)
+  const prepayTotal = sharedList.filter(b => (b.pay || "선결제") === "선결제").reduce((s, b) => s + usd(b), 0);
+  const cashTotal   = sharedList.filter(b => b.pay === "현금").reduce((s, b) => s + usd(b), 0);
+  const cardTotal   = sharedList.filter(b => b.pay === "카드").reduce((s, b) => s + usd(b), 0);
 
   const hyeminTotal = personalList.filter(p => (p.who || "혜민") === "혜민").reduce((s, b) => s + usd(b), 0);
   const eunjuTotal = personalList.filter(p => p.who === "은주").reduce((s, b) => s + usd(b), 0);
