@@ -969,46 +969,52 @@ function vBud() {
     </div>
 
     <!-- 공용 경비 섹션 -->
-    <div class="card ov">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+    <div class="card ov" style="padding: 10px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
         <div>
-          <b style="font-size:14px;">🌴 공용 경비 (1/N 나눔)</b>
-          <span class="sm" style="margin-left:6px;color:var(--ac);font-weight:700;">합계 $${f(sharedTotal)} (1인당 $${f(sharedPerPerson)})</span>
+          <b style="font-size:13.5px;">🌴 공용 경비 (1/N 나눔)</b>
+          <span class="sm" style="margin-left:4px;color:var(--ac);font-weight:700;">$${f(sharedTotal)} (인당 $${f(sharedPerPerson)})</span>
         </div>
       </div>
-
-      <table>
+    
+      <table style="width:100%;border-collapse:collapse;white-space:nowrap;">
         <thead>
-          <tr style="font-size:11px;color:var(--mu);text-align:left;">
-            <th>항목</th><th>금액</th><th>통화</th><th>분류</th><th>결제수단</th><th>정산상태</th><th></th>
+          <tr style="font-size:10.5px;color:var(--mu);text-align:left;border-bottom:1px solid var(--ln);">
+            <th style="padding:4px 2px;width:28%;">항목</th>
+            <th style="padding:4px 2px;width:18%;">금액</th>
+            <th style="padding:4px 2px;width:13%;">통화</th>
+            <th style="padding:4px 2px;width:15%;">분류</th>
+            <th style="padding:4px 2px;width:14%;">결제</th>
+            <th style="padding:4px 2px;width:12%;">정산</th>
+            <th style="padding:4px 0;width:20px;"></th>
           </tr>
         </thead>
         <tbody>
           ${sharedList.map((b, i) => `
-            <tr>
-              <td><input style="width:105px" value="${E(b.n)}" placeholder="항공, 숙소 등" onchange="up(() => S.bud[${i}].n = this.value)"></td>
-              <td><input type="number" style="width:72px" value="${b.a || ''}" placeholder="0" onchange="up(() => S.bud[${i}].a = +this.value)"></td>
-              <td>
-                <select onchange="up(() => S.bud[${i}].c = this.value)">
+            <tr style="border-bottom:1px solid rgba(0,0,0,0.03);">
+              <td style="padding:3px 2px;"><input style="width:100%;padding:5px 6px;font-size:12px;" value="${E(b.n)}" placeholder="항목명" onchange="up(() => S.bud[${i}].n = this.value)"></td>
+              <td style="padding:3px 2px;"><input type="number" style="width:100%;padding:5px 4px;font-size:12px;" value="${b.a || ''}" placeholder="0" onchange="up(() => S.bud[${i}].a = +this.value)"></td>
+              <td style="padding:3px 2px;">
+                <select style="width:100%;padding:5px 2px;font-size:11.5px;" onchange="up(() => S.bud[${i}].c = this.value)">
                   <option ${b.c === 'USD' ? 'selected' : ''}>USD</option>
                   <option ${b.c === 'KRW' ? 'selected' : ''}>KRW</option>
                 </select>
               </td>
-              <td><input style="width:60px" value="${E(b.k)}" placeholder="교통/식비" onchange="up(() => S.bud[${i}].k = this.value)"></td>
-              <td>
-                <select style="font-weight:600;font-size:12px;" onchange="up(() => S.bud[${i}].pay = this.value)">
-                  <option value="선결제" ${(b.pay || '선결제') === '선결제' ? 'selected' : ''}>💳 선결제</option>
-                  <option value="현금" ${b.pay === '현금' ? 'selected' : ''}>💵 현금</option>
-                  <option value="카드" ${b.pay === '카드' ? 'selected' : ''}>💳 카드</option>
+              <td style="padding:3px 2px;"><input style="width:100%;padding:5px 4px;font-size:12px;" value="${E(b.k)}" placeholder="분류" onchange="up(() => S.bud[${i}].k = this.value)"></td>
+              <td style="padding:3px 2px;">
+                <select style="width:100%;padding:5px 2px;font-size:11.5px;font-weight:600;" onchange="up(() => S.bud[${i}].pay = this.value)">
+                  <option value="선결제" ${(b.pay || '선결제') === '선결제' ? 'selected' : ''}>선결제</option>
+                  <option value="현금" ${b.pay === '현금' ? 'selected' : ''}>현금</option>
+                  <option value="카드" ${b.pay === '카드' ? 'selected' : ''}>카드</option>
                 </select>
               </td>
-              <td>
-                <select style="color:${b.st === 'Y' ? '#10b981' : '#f59e0b'};font-weight:700;font-size:12px;" onchange="up(() => S.bud[${i}].st = this.value)">
+              <td style="padding:3px 2px;">
+                <select style="width:100%;padding:5px 2px;font-size:11.5px;font-weight:700;color:${b.st === 'Y' ? '#10b981' : '#f59e0b'};" onchange="up(() => S.bud[${i}].st = this.value)">
                   <option value="Y" ${b.st === 'Y' ? 'selected' : ''}>완료</option>
                   <option value="N" ${b.st !== 'Y' ? 'selected' : ''}>미정산</option>
                 </select>
               </td>
-              <td><button class="x" onclick="up(() => S.bud.splice(${i}, 1))">×</button></td>
+              <td style="padding:3px 0;text-align:center;"><button class="x" style="font-size:15px;padding:0;" onclick="up(() => S.bud.splice(${i}, 1))">×</button></td>
             </tr>
           `).join('')}
         </tbody>
