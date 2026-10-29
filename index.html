@@ -608,8 +608,6 @@ function resizeImage(file, callback) {
   reader.readAsDataURL(file);
 }
 
-let saveTimer = null;
-
 // Firestore 중첩 배열 방지 데이터 정제 함수
 function sanitizeData(data) {
   if (!data) return defaultS;
