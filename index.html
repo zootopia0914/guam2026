@@ -870,29 +870,23 @@ function vBud() {
       </div>
 
       <!-- 결제 수단별 총 지출 요약 배지 -->
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:10px;text-align:center;">
-        <div style="background:var(--bg);padding:7px;border-radius:10px;border:1px solid var(--ln);">
-          <div class="sm" style="font-size:11px;">💳 선결제 완료</div>
-          <div style="font-weight:800;font-size:13px;color:#2563eb;margin-top:2px;">$${f(prepayTotal)}</div>
-          <div class="sm" style="font-size:10px;">≈ ${f(prepayTotal * rate)}원</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:12px;text-align:center;">
+        <div style="background:var(--bg);padding:10px 6px;border-radius:12px;border:1px solid var(--ln);">
+          <div style="font-size:13px;font-weight:700;color:var(--tx);">💳 선결제</div>
+          <div style="font-weight:800;font-size:17px;color:#2563eb;margin:4px 0 2px;">$${f(prepayTotal)}</div>
+          <div style="font-size:12px;color:var(--mu);">≈ ${f(prepayTotal * rate)}원</div>
         </div>
-        <div style="background:var(--bg);padding:7px;border-radius:10px;border:1px solid var(--ln);">
-          <div class="sm" style="font-size:11px;">💵 현지 현금 필요</div>
-          <div style="font-weight:800;font-size:13px;color:#10b981;margin-top:2px;">$${f(cashTotal)}</div>
-          <div class="sm" style="font-size:10px;">≈ ${f(cashTotal * rate)}원</div>
+        <div style="background:var(--bg);padding:10px 6px;border-radius:12px;border:1px solid var(--ln);">
+          <div style="font-size:13px;font-weight:700;color:var(--tx);">💵 현지 현금</div>
+          <div style="font-weight:800;font-size:17px;color:#10b981;margin:4px 0 2px;">$${f(cashTotal)}</div>
+          <div style="font-size:12px;color:var(--mu);">≈ ${f(cashTotal * rate)}원</div>
         </div>
-        <div style="background:var(--bg);padding:7px;border-radius:10px;border:1px solid var(--ln);">
-          <div class="sm" style="font-size:11px;">💳 현장 카드 결제</div>
-          <div style="font-weight:800;font-size:13px;color:#8b5cf6;margin-top:2px;">$${f(cardTotal)}</div>
-          <div class="sm" style="font-size:10px;">≈ ${f(cardTotal * rate)}원</div>
+        <div style="background:var(--bg);padding:10px 6px;border-radius:12px;border:1px solid var(--ln);">
+          <div style="font-size:13px;font-weight:700;color:var(--tx);">💳 현장 카드</div>
+          <div style="font-weight:800;font-size:17px;color:#8b5cf6;margin:4px 0 2px;">$${f(cardTotal)}</div>
+          <div style="font-size:12px;color:var(--mu);">≈ ${f(cardTotal * rate)}원</div>
         </div>
       </div>
-
-      <div class="row" style="grid-template-columns:auto 85px;margin-top:10px;">
-        <span class="sm">기준 환율 (1$ =)</span>
-        <input type="number" value="${rate}" onchange="up(() => S.rate = +this.value || 1400)">
-      </div>
-    </div>
 
     <!-- [2] 🌴 공용 경비 섹션 (1/N 나눔) -->
     <div class="card ov">
